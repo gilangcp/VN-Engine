@@ -13,14 +13,30 @@ VN-Engine features :
 -Remember user setting using HTML 5 LocalStorage
 -(almost) complete story scripting command including Flag , Conditional Branching, Jump
 -Easy story scripting using Javascript object
+-support Android
+
 
 TO-DO (important):
 -Refactor current code
 -Save/Load
 -Transition & Tween
+-Automatic scale to browser size
+-Configurable Engine option
+-Documentation
 
 TO-DO (less important):
+-Separate Example story from main code
 -Story Scripting tools
+
+Dependencies:
+-Easel JS (http://easeljs.com/)
+-PX Loader(http://thinkpixellab.com/pxloader/)
+-SoundManager2 (http://www.schillmania.com/projects/soundmanager2/)
+-Tween.JS (http://tweenjs.com/)
+
+The main code is at vnEngine.js, suplemented by soundController.js and resourceManager.js
+The Example is at vnEngine.js (temporary)
+
 
 Example Character using Kh Mix Character Generator
 http://khmix.sakura.ne.jp/download.shtml
