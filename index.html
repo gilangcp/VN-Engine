@@ -1,0 +1,57 @@
+<html>
+  <head>
+    <title></title>
+    <meta content="">
+    <style></style>
+    <script type="text/javascript" src="soundManager2.js"></script>
+    <script type="text/JavaScript" src="PxLoader.js"></script> 
+    <script type="text/JavaScript" src="PxLoaderImage.js"></script> 
+    <script type="text/JavaScript" src="PxLoaderSound.js"></script> 
+    <script type="text/javascript" src="easel.js"></script>
+    <script type="text/javascript" src="tween.js"></script>
+    <script type="text/javascript" src="Ease.js"></script>
+
+    <!- Vn Engine -->
+    <script type="text/javascript" src="SoundController.js"></script>
+    <script type="text/javascript" src="resourceManager.js"></script>
+    <script type="text/JavaScript" src="vnEngine.js"></script> 
+
+    <script type="text/javascript">
+     window.onload = function(){   
+      // initialize the sound manager 
+      soundManager.url = 'soundManager2/'; 
+      soundManager.flashVersion = 9; 
+      soundManager.useHighPerformance = true; // reduces delays 
+       
+      // reduce the default 1 sec delay to 500 ms 
+      soundManager.flashLoadTimeout = 500; 
+       
+      // mp3 is required by default, but we don't want any requirements 
+      soundManager.audioFormats.mp3.required = true; 
+       
+      // flash may timeout if not installed or when flashblock is installed 
+      soundManager.ontimeout(function(status) { 
+          // no flash, go with HTML5 audio 
+          soundManager.useHTML5Audio = true; 
+          soundManager.preferFlash = false; 
+          soundManager.reboot(); 
+      }); 
+       
+      soundManager.onready(function() { 
+        // ok to show the button to run the sound sample
+        vnEngine = new vnEngine();
+        vnEngine.initGame("game");
+
+      }); 
+    }
+    </script>
+
+  </head>
+  <body >
+
+  <!-- nyaha --  350 393.75-->
+    <canvas id="game" width="700" height="393.75" style="border:1px solid black;">
+      Your Browser doesn't support HTML 5 :(
+    </canvas>    
+  </body>
+</html>

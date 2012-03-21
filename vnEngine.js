@@ -1,0 +1,670 @@
+var script = new Array;
+ 
+   script.push({type:'playBGM',soundLabel: 'opening'});
+  script.push({type:'changeBackground',imageLabel:'s1'});
+  script.push({type:'delay',ms:3000});
+  script.push({type:'changeBackground',imageLabel:'s2'});
+  script.push({type:'delay',ms:'3000'});
+  script.push({type:'initMenu'});
+
+  script.push({type:'addJumpLabel', jumpLabel:'startGame'});
+  script.push({type:'startGame'});
+  script.push({type:'addFlag',flagLabel :'F1',flagValue:'false'});
+  script.push({type:'addFlag',flagLabel :'F2',flagValue:'false'});
+  script.push({type:'addJumpLabel', jumpLabel:'A1'});
+  script.push({type:'if',
+              op:'==',
+              exp1 : {type:'getFlag',flagLabel:"F2"}, 
+              exp2:'true',
+              right : {type:'editFlag',flagLabel:"F1", flagValue:'true'},
+              wrong :undefined});
+  script.push({type:'changeBackground',imageLabel:'s1'});
+  script.push({type:'playBGM',soundLabel: 'normal'});
+
+  script.push({type:'speak' ,character :'Gilang', speak: 'kimochi  :)'});
+  script.push({type:'showCharacter',imageLabel :'charaRina1' , position: 'left'});
+  script.push({type:'pauseScript'});
+  script.push({type:'playBGM',soundLabel: 'normal'});
+  script.push({type:'showCharacter',imageLabel :'charaClara1', position: 'center'});
+  script.push({type:'pauseScript'});
+  script.push({type:'playBGM',soundLabel: 'normal'});
+  script.push({type:'showCharacter',imageLabel :'charaLily1',position:'right'});
+  script.push({type:'pauseScript'});
+
+  script.push({type:'changeBackground',imageLabel:'s2'});
+  script.push({type:'speak', character :'rina',speak : 'apaan pagi-pagi udah halo?'});
+  script.push({type:'changeBackground',imageLabel:'s1'});
+  script.push({type:'pauseScript'});
+  script.push({type:'hideCharacter',position :'right'});
+  script.push({type:'pauseScript'});
+  script.push({type:'hideCharacter',position :'left'});
+  script.push({type:'pauseScript'});
+  script.push({type:'changeBackground',imageLabel:'s2'});
+  script.push({type:'pauseScript'});
+  script.push({type:'speak',character : 'gilang' , speak : 'Eh? semuanya pada kemana?'});
+  script.push({type:'hideCharacter',position :'center'});
+
+  script.push({type:'if',
+            op:'==',
+            exp1 : {type:'getFlag',flagLabel:"F1"}, 
+            exp2:'true',
+            right : undefined,
+            wrong :[{type :'editFlag',flagLabel:'F2',flagValue:'true'},{type :'jumpTo',jumpLabel:'A1'}]});
+  script.push({type:'option' , optionList : [
+    {caption : 'Ulangi' , perform: {type : 'jumpTo' , jumpLabel:'A1'}},
+    {caption :'Selesai' , perform: undefined}
+  ]});
+  script.push({type:'playBGM',soundLabel: 'ending'});
+  script.push({type: 'speak', character:'Gilang',speak:'apa yang terjadi? gamenya selesai?'});
+
+
+var resourceList = new Array;
+  resourceList.push({type :'img',url  :'resource/image/1.jpg',imageLabel :'s1'});
+  resourceList.push({type :'img',url  :'resource/image/2.jpg',imageLabel :'s2'});
+  resourceList.push({type :'img',url  :'resource/image/chara/rina1.png',imageLabel :'charaRina1'});
+  resourceList.push({type :'img',url  :'resource/image/chara/clara1.png',imageLabel :'charaClara1'});
+  resourceList.push({type :'img',url  :'resource/image/chara/lily1.png',imageLabel :'charaLily1'});
+  resourceList.push({type :'snd',url  :'resource/sound/ending.mp3', soundLabel : 'ending'});
+  resourceList.push({type :'snd',url  : 'resource/sound/opening.mp3',soundLabel : 'opening'});
+  resourceList.push({type :'snd',url  :'resource/sound/sad.mp3',soundLabel : 'sad'});
+  resourceList.push({type :'snd',url  : 'resource/sound/normal.mp3',soundLabel : 'normal'});
+  resourceList.push({type :'snd',url  : 'resource/sfx/click.wav',soundLabel : 'sfxClick'});
+  resourceList.push({type :'img',url  :'resource/image/3.jpg' , imageLabel:'menu'});
+  resourceList.push({type :'img',url  :'resource/image/4.jpg' , imageLabel:'settings'});
+
+function vnEngine(){
+  var self = this;
+  
+  this.canvas;
+  this.stage;
+  this.context;
+
+  this.speakTextDisplayObject = -1;
+
+  this.flagList = new Array;
+  this.scriptCounter;
+  this.tempScriptQueue = new Array;
+  this.tempScriptCounter =0;
+  this.noCheckScriptFlag ;
+  this.jumpLabelList = new Array;
+
+  this.resourceManager;
+  this.soundController;
+  this.graphicsManager;
+
+  this.initGame = function(canvasId){
+    //Bind canvas to easel JS
+    this.canvas = document.getElementById(canvasId);
+    document.getElementById(canvasId).oncontextmenu=new Function ("return false");
+    this.context = this.canvas.getContext("2d");
+
+    this.initScript();
+
+    //create easel js canvas  
+    this.stage = new Stage(this.canvas);
+    this.stage.enableMouseOver()
+    Ticker.setFPS(20);
+    Ticker.addListener(this.stage,false);
+
+    this.noCheckScriptFlag = false;
+
+    //Setup sound Controller
+    this.graphicsManager = new GraphicsManager();
+
+    this.soundController = new SoundController(); 
+
+
+    //start loading resource
+    this.resourceManager = new ResourceManager(this.stage);
+    this.resourceManager.init();
+  }
+
+
+
+  this.initGameEnvirontment = function(){
+    this.graphicsManager.createDialogBox();
+  }
+
+  //Mengecek Script, Menandai baris pada
+  //Jump Label
+  //Mungkin nanti bisa di generate, tgl di load
+  this.initScript =function(){
+    for(var i = 0; i<script.length;i++){
+      switch (script[i].type){
+      case 'addJumpLabel': 
+        this.jumpLabelList.push({jumpLabel:script[i].jumpLabel , scriptCounter : i+1 });
+      break;
+      case 'addFlag':
+        this.flagList.push({flagLabel: script[i].flagLabel,flagValue :script[i].flagValue});
+      break;
+      }
+    }
+  }
+
+  //Nantinya fungsi ini akan mengatur cepat jalanya script + 
+  //Memunculkan menu ketika klik kanan
+  this.checkNextScript = function(ev){
+      if (ev.nativeEvent.which == 3 ||ev.nativeEvent.button == 2 ){
+      }
+      else if(vnEngine.noCheckScriptFlag == false){
+        vnEngine.checkScript();
+      }
+  }
+
+  //Menjalankan Script selanjutnya
+  //bertugas memilah & menjalankan perintah dari script
+  this.checkScript = function(scriptArray){
+     if(scriptArray != undefined){
+      this.tempScriptQueue.splice(0,this.tempScriptQueue.length);
+        if(scriptArray.length == undefined){
+           this.tempScriptQueue.push(scriptArray);
+        }
+        else{
+          for(var i = 0 ; i <scriptArray.length;i++){
+            this.tempScriptQueue.push(scriptArray[i]);
+            }
+        }
+        this.tempScriptCounter = 0;
+     }
+
+     if(this.tempScriptCounter < this.tempScriptQueue.length){
+      this.tempScriptCounter++;
+      this.parseScript(this.tempScriptQueue,this.tempScriptCounter);
+     }
+     else{
+      this.scriptCounter++;
+      this.parseScript(script,this.scriptCounter);
+    }
+  }
+
+
+  //Menjalankan Script selanjutnya
+  //bertugas memilah & menjalankan perintah dari script
+  this.parseScript = function(script,scriptCounter){
+    if(scriptCounter-1<script.length){
+     console.log(scriptCounter-1 + " " + script[scriptCounter-1].type);
+      switch(script[scriptCounter-1].type){
+      case 'initMenu' :
+        vnEngine.initMenu();
+      break;
+      case 'startGame' :
+        vnEngine.initGameEnvirontment();
+        break;
+      case 'menu':
+        vnEngine.initMenu();
+        break;
+      case 'speak' :
+        this.speak(script[scriptCounter-1].character,script[scriptCounter-1].speak);
+        break;
+      case 'changeBackground':
+        this.graphicsManager.changeBackground(script[scriptCounter-1].imageLabel);
+        break;
+      case 'delay' :
+        this.scriptDelay(script[scriptCounter-1].ms);
+        break;
+      case 'showCharacter' :
+        this.graphicsManager.showCharacter(script[scriptCounter-1].imageLabel,script[scriptCounter-1].position);
+        break;
+      case 'hideCharacter':
+        this.graphicsManager.hideCharacter(script[scriptCounter-1].position);
+      break;
+      case 'pauseScript':
+      break;
+      case 'jumpTo' :
+        var index = arrayIndexOf(this.jumpLabelList,"jumpLabel",script[scriptCounter-1].jumpLabel);
+        if(index != -1){
+          this.scriptCounter = this.jumpLabelList[index].scriptCounter;
+          this.checkScript();
+        }
+        else{
+          alert("Script Error");
+        }
+      break;
+      case 'if':
+       this.scriptIf(script[scriptCounter-1]);
+      break;
+      case 'addFlag' :
+      case 'addJumpLabel':
+        this.checkScript();
+      break;
+      case 'editFlag':
+        this.editFlag(script[scriptCounter-1].flagLabel ,script[scriptCounter-1].flagValue);
+      break;
+      case 'playBGM':
+        this.soundController.playBGM(script[scriptCounter-1].soundLabel);
+      break;
+      case 'stopBGM' :
+        this.soundController.stopBGM();
+      break;
+      case 'option':
+        this.scriptOption(script[scriptCounter-1].optionList);
+      break;
+      case 'showSettingsMenu' :
+        this.initSettingsMenu();
+      break;
+      default:
+       alert("script error");
+       break;
+    }
+  }
+}
+  this.initMenu = function(){
+    var res = vnEngine.resourceManager.getResource("menu").img;
+    var container = new Container();
+    var bitmap = new Bitmap(res);
+
+    bitmap.scaleY =  this.canvas.height / res.height;
+    bitmap.scaleX = this.canvas.width /  res.width;
+    bitmap.x =0;
+    bitmap.y = 0;
+    container.addChild(bitmap);
+    var y =this.canvas.height*3/5;
+
+    var startGameButton = new Button("Start Game",{perform:{type:'jumpTo', jumpLabel:'startGame'}},0,y,this.canvas.width,30);
+    var loadButton = new Button("Load",{perform: undefined},0, y+40, this.canvas.width,30);
+    var optionButton = new Button("Option",{perform: undefined},0, y+80, this.canvas.width,30);
+    optionButton.onClick = function(){
+      container.visible = false;
+      vnEngine.checkScript({type:'showSettingsMenu'});
+    }
+    container.addChild(startGameButton);
+    container.addChild(optionButton);
+    container.addChild(loadButton);
+    this.stage.addChild(container);
+  }
+
+  this.initSettingsMenu = function(){
+    var container = new Container();
+
+    var res = vnEngine.resourceManager.getResource("settings").img;
+
+    var bitmap = new Bitmap(res);
+    bitmap.scaleY =  this.canvas.height / res.height;
+    bitmap.scaleX = this.canvas.width /  res.width;
+    bitmap.x =0;
+    bitmap.y = 0;
+
+
+    var bgLayer = new Graphics();
+    bgLayer.beginFill(Graphics.getRGB(0,0,0,0.5));
+
+    var bgLayerXY = vnEngine.canvas.height/20;
+    var bgLayerW = vnEngine.canvas.width- vnEngine.canvas.height/10;
+    var bgLayerH = vnEngine.canvas.height/10*9;
+    
+    bgLayer.drawRect(bgLayerXY,bgLayerXY, 
+    bgLayerW , bgLayerH);
+    var bgLayerShape = new Shape(bgLayer);
+
+
+    var textMenu = new Text("MENU" ,"17px arial","#FFF");
+    textMenu.y = bgLayerXY+ 30;
+    textMenu.x = vnEngine.canvas.width/2 - textMenu.getMeasuredWidth()/2;
+
+
+    var textBGMVolume = new Text("BGM Volume" , "17px arial", "#FFF");
+    textBGMVolume.y = bgLayerXY+textMenu.y +30;
+    textBGMVolume.x =bgLayerXY +bgLayerW/10 ;
+
+    var bgmSlider = new Slider(textBGMVolume.x,textBGMVolume.y+10,bgLayerW *8/10,30);
+    bgmSlider.setBarPosition(vnEngine.soundController.getBGMVolume());
+    bgmSlider.onBarChanged = function(e){
+      vnEngine.soundController.changeBGMVolume(e);
+    }
+
+    var textSFXVolume = new Text("SoundEffect Volume" , "17px arial", "#FFF");
+    textSFXVolume.y =bgmSlider.positionY+50
+    textSFXVolume.x =bgmSlider.positionX ;
+
+    var sfxSlider = new Slider(textSFXVolume.x,textSFXVolume.y+10,bgLayerW *8/10,30 );
+    sfxSlider.setBarPosition(vnEngine.soundController.getSFXVolume());
+    sfxSlider.onBarChanged = function(e){
+      vnEngine.soundController.changeSoundEffectVolume(e);
+    }
+
+    var backButton = new Button("back",{perform: undefined},bgLayerW-100,bgLayerH-30,100,30);
+    backButton.onClick=function(e){
+      vnEngine.stage.removeChild(container);
+      vnEngine.stage.getChildAt(vnEngine.stage.getNumChildren()-1).visible = true;
+    }
+
+    var revertToDefaultButton = new Button("Revert To Default",{perform: undefined},bgLayerW-250,bgLayerH-30,140,30);
+    revertToDefaultButton.onClick = function(e){
+       bgmSlider.setBarPosition(50);
+       sfxSlider.setBarPosition(50);
+    }
+
+    container.addChild(bitmap);
+    container.addChild(bgLayerShape);
+    container.addChild(textMenu);
+    container.addChild(textBGMVolume);
+    container.addChild(bgmSlider);
+    container.addChild(textSFXVolume);
+    container.addChild(sfxSlider);
+    container.addChild(revertToDefaultButton);
+    container.addChild(backButton);
+    vnEngine.stage.addChild(container);
+  }
+
+
+  this.scriptIf = function(script){
+    var exp1 = script.exp1;
+    var exp2 = script.exp2;
+
+    if(exp1.type == 'getFlag'){
+      exp1 = this.getFlag(exp1.flagLabel);
+    }
+      
+    if(exp2.type == 'getFlag'){
+       exp2 = this.getFlag(exp2.flagLabel);
+    }
+
+    var op = script.op;
+    var toBeEvaluated = "("+exp1+ op + exp2 +")? true: false;";
+    var result = eval(toBeEvaluated); 
+
+    if(result == true){
+      this.checkScript(script.right);
+    }
+    else{
+      this.checkScript(script.wrong);
+    }
+  }
+
+  this.scriptOption = function(optionList){
+    var heightGanjil = (this.canvas.height - (1/4 * this.canvas.height))*(2/4)+40;
+    var heightGenap = (this.canvas.height - (1/4 * this.canvas.height))*(2/4);
+    var container = new Container();
+    var data;
+    for (var i = 0;i<optionList.length;i++){
+      if(i%2 == 0){
+        //container.addChild(shape);
+        data = {perform : optionList[i].perform};
+        var button  = new Button(optionList[i].caption,data,0,heightGenap,this.canvas.width,30);
+        container.addChild(button);
+        heightGenap-=40;;  
+      }
+      else{
+        data = {perform : optionList[i].perform};
+        var button  = new Button(optionList[i].caption,data,0,heightGanjil,this.canvas.width,30);
+        container.addChild(button);
+        heightGanjil+=40;
+      }
+    }
+  this.stage.addChild(container);
+  this.noCheckScriptFlag = true;
+  }
+
+  this.editFlag = function (flagLabel , flagValue){
+    var index  = arrayIndexOf(this.flagList,"flagLabel",flagLabel);
+    if(index != -1){
+        this.flagList[index].flagValue = flagValue;
+      }
+      else{
+        alert("script error");
+      }
+      this.checkScript();
+  }
+
+  this.getFlag = function (flagLabel){
+    var index  = arrayIndexOf(this.flagList,"flagLabel",flagLabel);
+    if(index != -1){
+        return this.flagList[index].flagValue;
+      }
+      else{
+        alert("script error");
+      }
+  }
+
+  this.scriptDelay = function(ms){
+    setTimeout("vnEngine.checkScript()",ms);
+  }
+
+  this.speak = function (character , speak){
+    if(this.speakTextDisplayObject<0){
+      var txt = new Text(speak,"17px arial","#FFF");
+      txt.x = 30;
+      txt.y = this.canvas.height-this.canvas.height/8;
+      this.stage.addChildAt(txt,this.stage.getNumChildren());
+      console.log( this.stage.getNumChildren());
+      var chara = new Text(character,"17px arial","#FFF");
+      chara.x = 30;
+      chara.y = this.canvas.height-this.canvas.height/5;
+      this.stage.addChildAt(chara,this.stage.getNumChildren());
+      this.speakTextDisplayObject = this.stage.getNumChildren();
+      console.log( this.stage.getNumChildren());
+    }
+    else{
+      this.stage.getChildAt(this.speakTextDisplayObject-1).text =character;
+      this.stage.getChildAt(this.speakTextDisplayObject-2).text = speak;
+    }
+  }
+}
+
+function arrayIndexOf(array, obj,value) {
+        for (var i = 0; i < array.length; i++) {
+          if (array[i][obj] == value) {
+              return i;
+          }
+      }
+      return -1;
+  }
+
+
+function Button(text,data,x,y,width,height){
+  var container = new Container();
+  var optionRect = new Graphics();
+  optionRect.beginFill(Graphics.getRGB(0,0,0,0.5));
+  optionRect.drawRect(x,y,width ,height);
+
+  var shape = new Shape(optionRect);
+  shape.data = data;
+  shape.data.x = x;
+  shape.data.y = y;
+  shape.data.w =width;
+  shape.data.h = height;
+
+
+  container.addChild(shape);
+
+  var txt = new Text(text,"17px arial","#FFF");
+  txt.x = width/2 - txt.getMeasuredWidth()/2+x;
+  txt.y = y+20;
+  container.addChild(txt);
+
+
+  container.onMouseOver = function(e){
+    if(container.isVisible ()){
+      console.log(container.isVisible());
+      var obj = e.target.children[0];
+      vnEngine.soundController.playEffect("sfxClick");
+      obj.graphics.clear();
+      obj.graphics.beginFill(Graphics.getRGB(255,255,255,0.5));
+      obj.graphics.drawRect(obj.data.x,obj.data.y,obj.data.w,obj.data.h);
+    }
+  }
+
+  container.onMouseOut =function(e){
+    if(container.isVisible ()){
+      var obj = e.target.children[0];
+      obj.graphics.clear();
+      obj.graphics.beginFill(Graphics.getRGB(0,0,0,0.5));
+      obj.graphics.drawRect(obj.data.x,obj.data.y,obj.data.w,obj.data.h);
+    }
+  }
+
+  container.onClick =function(e){
+    if(container.isVisible ()){
+      if(e.target.parent.parent.isContainer == "true"){
+        vnEngine.stage.removeChild(e.target.parent.parent);
+      }
+      else{
+       vnEngine.stage.removeChild(e.target.parent);
+      }
+        vnEngine.noCheckScriptFlag = false;
+        vnEngine.checkScript(e.target.children[0].data.perform);
+    }
+  }
+  return container;
+}
+
+function GraphicsManager(){
+  this.backgroundIndex =-1;
+
+  this.changeBackground = function(imageLabel){
+    var res  = vnEngine.resourceManager.getResource(imageLabel).img;
+    if(this.backgroundIndex > 0){
+      vnEngine.stage.removeChildAt(this.backgroundIndex);
+      var bitmap = new Bitmap(res);
+      bitmap.scaleY =  vnEngine.canvas.height / res.height;
+      bitmap.scaleX = vnEngine.canvas.width /  res.width;
+      bitmap.x =0;
+      bitmap.y = 0;
+      bitmap.onClick = vnEngine.checkNextScript;
+      vnEngine.stage.addChildAt(bitmap,this.backgroundIndex);
+    }
+    else{
+      var bitmap = new Bitmap(res);
+      bitmap.scaleY =  vnEngine.canvas.height / res.height;
+      bitmap.scaleX = vnEngine.canvas.width /  res.width;
+      bitmap.x =0;
+      bitmap.y = 0;
+      vnEngine.stage.addChild(bitmap);
+      this.backgroundIndex = vnEngine.stage.getNumChildren()-1;
+    }
+    Tween.get(bitmap).to({alpha:0}).to({alpha:1},300);
+    vnEngine.checkScript();
+  } 
+
+ this.showCharacter = function(chara , position){
+    var res  = vnEngine.resourceManager.getResource(chara).img;
+    var bitmap = new Bitmap(res);
+    var scaledY = vnEngine.canvas.height * (9/10);
+
+    var Yscaling = scaledY/res.height; 
+
+    bitmap.scaleY =  Yscaling;
+    bitmap.scaleX =  Yscaling;
+    bitmap.y = 1/10 * vnEngine.canvas.height;
+    
+    switch(position){
+      case 'left' :
+        bitmap.x = 1/3 * vnEngine.canvas.width *Yscaling/2;
+      break;
+      case 'right':
+        bitmap.x = vnEngine.canvas.width  *3/4 - res.width*Yscaling /2;
+      break;
+      case 'center' :
+        bitmap.x = vnEngine.canvas.width/2 - res.width*Yscaling /2;
+      break;
+      default:
+        alert("script Error");
+      break;
+  } 
+  bitmap.position = position;   
+  vnEngine.stage.addChildAt(bitmap,this.backgroundIndex+1); 
+  Tween.get(bitmap).to({alpha:0}).wait(100).to({alpha:1},300);
+  vnEngine.speakTextDisplayObject+=1
+  vnEngine.checkScript();
+  }
+
+  this.hideCharacter=function(position){
+    var chara,i;
+    for(i = 0 ; i < vnEngine.stage.getNumChildren();i++){
+      chara = vnEngine.stage.getChildAt(i);
+      if(chara.position != undefined ){
+        if(chara.position == position) {
+          break;
+        }
+      }
+    }
+      if (i+1 == vnEngine.stage.getNumChildren) {
+        alert("script error");
+      }
+      else{
+        this.speakTextDisplayObject-=1;
+        Tween.get(chara).to({alpha:0},100).call(vnEngine.stage.removeChild,
+          [chara],vnEngine.stage).call(function(){vnEngine.speakTextDisplayObject-=1});
+          vnEngine.checkScript();
+      }
+  }
+
+  this.createDialogBox = function(){
+    var textRect = new Graphics();
+    textRect.beginFill(Graphics.getRGB(0,0,0,0.5));
+    textRect.drawRect(0,vnEngine.canvas.height - (1/4 * vnEngine.canvas.height) , vnEngine.canvas.width , 1/4 * vnEngine.canvas.height);
+
+    var shape = new Shape(textRect);
+    shape.onClick = vnEngine.checkNextScript;
+    vnEngine.stage.addChild(shape);
+    Tween.get(shape).to({alpha:0}).wait(100).to({alpha:1},300);
+    vnEngine.checkScript();
+  }
+}
+
+
+
+function Slider(x,y,width,height){
+  var container = new Container();
+  container.positionX = x;
+  container.positionY = y;
+
+  container.onBarChanged = undefined;
+  //Create Background
+  var bar = new Graphics();
+  bar.beginStroke(Graphics.getRGB(240,255,244));
+  bar.beginFill(Graphics.getRGB(240,255,244));
+  bar.drawRect(x,y + height/2 - height/6,width,height/3); 
+  var barShape = new Shape(bar);
+  barShape.width = width;
+
+  //create Slider
+  var slide = new Graphics();
+  slide.beginStroke(Graphics.getRGB(222,222,222));
+  slide.beginFill(Graphics.getRGB(222,222,222));
+  slide.drawRect(x,y,height/5,height);
+  var slideShape = new Shape(slide);
+  slideShape.width =height/5; 
+  var offset=x;
+
+  //Event Handler;
+  (function(slide , bar, container) {
+    var change;
+    slide.onPress = function(evt) {
+      evt.onMouseMove = function(ev) {
+        if(ev.stageX  <= offset + barShape.width && ev.stageX >= offset){
+          slideShape.x = ev.stageX - offset; 
+          change =  slideShape.x / barShape.width *100;
+          if(container.onBarChanged !=undefined){
+           container.onBarChanged(change);
+          }
+        }  
+      }
+      }
+    bar.onPress = function(evt){
+      slideShape.x = evt.stageX - offset - slideShape.width/2;
+      change =  slideShape.x / barShape.width *100;
+        if(container.onBarChanged !=undefined){
+         container.onBarChanged(change);
+        }
+
+     }
+    container.setBarPosition = function(presentage){
+      slideShape.x = presentage/100*barShape.width;
+       if(container.onBarChanged !=undefined){
+          container.onBarChanged(presentage);
+        }
+
+    }
+  })(slideShape,barShape,container);
+
+  container.addChild(barShape);
+  container.addChild(slideShape);
+  return container;
+}
+
+
+
+
+
+
