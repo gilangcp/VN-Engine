@@ -1,0 +1,31 @@
+VN-Engine v0.1
+HTML 5 Canvas Visual Novel Engine
+
+from wikipedia : A visual novel (ビジュアルノベル bijuaru noberu) is an interactive fiction game,[1] featuring mostly static anime-style graphics, or occasionally live-action stills or video footage.[2]. 
+
+VN-Engine goal is to be my "HTML 5 proofing concept tools" so don't expect this project to be mature
+
+
+VN-Engine features :
+
+-HTML 5 Audio, using SoundManager2 Framework
+-Created using EaselJS framework
+-Remember user setting using HTML 5 LocalStorage
+-(almost) complete story scripting command including Flag , Conditional Branching, Jump
+-Easy story scripting using Javascript object
+
+TO-DO (important):
+-Refactor current code
+-Save/Load
+-Transition & Tween
+
+TO-DO (less important):
+-Story Scripting tools
+
+Example Character using Kh Mix Character Generator
+http://khmix.sakura.ne.jp/download.shtml
+
+Example Music by Kevin MacLeod
+http://incompetech.com/m/c/royalty-free/
+
+
