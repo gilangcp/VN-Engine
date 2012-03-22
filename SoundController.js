@@ -25,7 +25,6 @@ function SoundController(){
 		  soundManager.play(this.bgm,{volume:this.bgmVolume,onfinish: function() {
 		  self.playBGM();
 		}});
-		  vnEngine.checkScript();
 		}
 		else if (this.bgm != undefined){
 		  soundManager.play(this.bgm,{volume:this.bgmVolume,onfinish: function() {

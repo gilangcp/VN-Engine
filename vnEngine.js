@@ -1,6 +1,6 @@
 var script = new Array;
  
-   script.push({type:'playBGM',soundLabel: 'opening'});
+  script.push({type:'playBGM',soundLabel: 'menuBGM'});
   script.push({type:'changeBackground',imageLabel:'s1'});
   script.push({type:'delay',ms:3000});
   script.push({type:'changeBackground',imageLabel:'s2'});
@@ -65,7 +65,7 @@ var resourceList = new Array;
   resourceList.push({type :'img',url  :'resource/image/chara/clara1.png',imageLabel :'charaClara1'});
   resourceList.push({type :'img',url  :'resource/image/chara/lily1.png',imageLabel :'charaLily1'});
   resourceList.push({type :'snd',url  :'resource/sound/ending.mp3', soundLabel : 'ending'});
-  resourceList.push({type :'snd',url  : 'resource/sound/opening.mp3',soundLabel : 'opening'});
+  resourceList.push({type :'snd',url  : 'resource/sound/opening.mp3',soundLabel : 'menuBGM'});
   resourceList.push({type :'snd',url  :'resource/sound/sad.mp3',soundLabel : 'sad'});
   resourceList.push({type :'snd',url  : 'resource/sound/normal.mp3',soundLabel : 'normal'});
   resourceList.push({type :'snd',url  : 'resource/sfx/click.wav',soundLabel : 'sfxClick'});
@@ -79,7 +79,7 @@ function vnEngine(){
   this.stage;
   this.context;
 
-  this.speakTextDisplayObject = -1;
+  this.speakTextDisplayObject = undefined;
 
   this.flagList = new Array;
   this.scriptCounter;
@@ -123,7 +123,7 @@ function vnEngine(){
 
 
   this.initGameEnvirontment = function(){
-    console.log("masuk sini?");
+    vnEngine.ScreenStatus =2;
     this.graphicsManager.createDialogBox();
   }
 
@@ -153,8 +153,8 @@ function vnEngine(){
           vnEngine.ScreenStatus=2;
         }
         else{
-        vnEngine.noCheckScriptFlag = true;
-        vnEngine.ScreenStatus =3;
+        vnEngine.noCheckScriptFlag=true;
+        vnEngine.ScreenStatus = 3;
         vnEngine.initRightClickMenu();
       }
       }
@@ -244,6 +244,7 @@ function vnEngine(){
       break;
       case 'playBGM':
         this.soundController.playBGM(script[scriptCounter-1].soundLabel);
+        vnEngine.checkScript();
       break;
       case 'stopBGM' :
         this.soundController.stopBGM();
@@ -262,6 +263,7 @@ function vnEngine(){
 }
   this.initMenu = function(){
     vnEngine.stage.removeAllChildren();
+    vnEngine.ScreenStatus = 1;
     var res = vnEngine.resourceManager.getResource("menu").img;
     var container = new Container();
     var bitmap = new Bitmap(res);
@@ -271,6 +273,8 @@ function vnEngine(){
     bitmap.x =0;
     bitmap.y = 0;
     container.addChild(bitmap);
+    vnEngine.soundController.playBGM("menuBGM");
+
     var y =this.canvas.height*3/5;
 
     var startGameButton = new Button("Start Game",{perform:undefined},0,y,this.canvas.width,30);
@@ -301,6 +305,7 @@ function vnEngine(){
   }
 
   this.initSettingsMenu = function(){
+    //vnEngine.ScreenStatus = 4;
     var container = new Container();
 
     var res = vnEngine.resourceManager.getResource("settings").img;
@@ -392,7 +397,8 @@ function vnEngine(){
       vnEngine.checkScript({type:'showSettingsMenu'});
     }
     var returnToTitleButton = new Button("Return to title",{perform:undefined},x,y+180,w,30);
-    returnToTitleButton.onClick - function(){
+    returnToTitleButton.onClick = function(){
+      vnEngine.soundController.stopBGM();
       vnEngine.checkScript({type:'initMenu'});
     }
 
@@ -480,24 +486,24 @@ function vnEngine(){
   }
 
   this.speak = function (character , speak){
-    if(this.speakTextDisplayObject<0){
+    if(this.speakTextDisplayObject == undefined){
       var txt = new Text(speak,"17px arial","#FFF");
       txt.x = 30;
       txt.y = this.canvas.height-this.canvas.height/8;
-      this.stage.addChildAt(txt,this.stage.getNumChildren());
-      console.log( this.stage.getNumChildren());
+      this.stage.addChild(txt);
       var chara = new Text(character,"17px arial","#FFF");
       chara.x = 30;
       chara.y = this.canvas.height-this.canvas.height/5;
-      this.stage.addChildAt(chara,this.stage.getNumChildren());
-      this.speakTextDisplayObject = this.stage.getNumChildren();
-      console.log( this.stage.getNumChildren());
+      this.stage.addChild(chara);
+      this.speakTextDisplayObject = chara;
     }
     else{
-      this.stage.getChildAt(this.speakTextDisplayObject-1).text =character;
-      this.stage.getChildAt(this.speakTextDisplayObject-2).text = speak;
+      this.speakTextDisplayObject.text =character;
+      this.stage.getChildAt(this.stage.getChildIndex(this.speakTextDisplayObject)-1).text = speak;
     }
   }
+
+
 }
 
 function arrayIndexOf(array, obj,value) {
@@ -552,38 +558,46 @@ function Button(text,data,x,y,width,height){
   }
 
   container.onClick =function(e){
+    vnEngine.noCheckScriptFlag = false;
     vnEngine.checkScript(e.target.children[0].data.perform);
     vnEngine.stage.removeChild(e.target.parent);
-    this.noCheckScriptFlag = true;
   }
   return container;
 }
 
 function GraphicsManager(){
-  this.backgroundIndex =-1;
-
   this.changeBackground = function(imageLabel){
     var res  = vnEngine.resourceManager.getResource(imageLabel).img;
-    if(this.backgroundIndex > 0){
-      vnEngine.stage.removeChildAt(this.backgroundIndex);
-      var bitmap = new Bitmap(res);
-      bitmap.scaleY =  vnEngine.canvas.height / res.height;
-      bitmap.scaleX = vnEngine.canvas.width /  res.width;
-      bitmap.x =0;
-      bitmap.y = 0;
+    var bitmap = new Bitmap(res);
+    bitmap.scaleY =  vnEngine.canvas.height / res.height;
+    bitmap.scaleX = vnEngine.canvas.width /  res.width;
+    bitmap.x =0;
+    bitmap.y = 0;
+    bitmap.isBackground = true;
+    if(vnEngine.ScreenStatus ==2){
       bitmap.onClick = vnEngine.checkNextScript;
+    }
+
+
+    if(vnEngine.stage.getNumChildren() >0){
+      if(vnEngine.stage.getChildAt(0).isBackground){
+        var old = vnEngine.stage.getChildAt(0);
+        vnEngine.stage.removeChildAt(0);
+        vnEngine.stage.addChildAt(bitmap,0);
+        vnEngine.stage.addChildAt(old,0);
+        Tween.get(bitmap).to({alpha:0}).to({alpha:1},300).call(function(){
+        vnEngine.stage.removeChildAt(0);      
+        });
+      }
+      else{
       vnEngine.stage.addChildAt(bitmap,0);
+      Tween.get(bitmap).to({alpha:0}).to({alpha:1},300);
+      }
     }
     else{
-      var bitmap = new Bitmap(res);
-      bitmap.scaleY =  vnEngine.canvas.height / res.height;
-      bitmap.scaleX = vnEngine.canvas.width /  res.width;
-      bitmap.x =0;
-      bitmap.y = 0;
       vnEngine.stage.addChild(bitmap);
-      this.backgroundIndex = vnEngine.stage.getNumChildren()-1;
+      Tween.get(bitmap).to({alpha:0}).to({alpha:1},300);
     }
-    Tween.get(bitmap).to({alpha:0}).to({alpha:1},300);
     vnEngine.checkScript();
   } 
 
@@ -613,9 +627,8 @@ function GraphicsManager(){
       break;
   } 
   bitmap.position = position;   
-  vnEngine.stage.addChildAt(bitmap,this.backgroundIndex+1); 
+  vnEngine.stage.addChildAt(bitmap,1); 
   Tween.get(bitmap).to({alpha:0}).wait(100).to({alpha:1},300);
-  vnEngine.speakTextDisplayObject+=1
   vnEngine.checkScript();
   }
 
@@ -633,9 +646,8 @@ function GraphicsManager(){
         alert("script error");
       }
       else{
-        this.speakTextDisplayObject-=1;
         Tween.get(chara).to({alpha:0},100).call(vnEngine.stage.removeChild,
-          [chara],vnEngine.stage).call(function(){vnEngine.speakTextDisplayObject-=1});
+          [chara],vnEngine.stage);
           vnEngine.checkScript();
       }
   }
