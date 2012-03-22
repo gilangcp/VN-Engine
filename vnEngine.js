@@ -86,6 +86,7 @@ function vnEngine(){
   this.tempScriptQueue = new Array;
   this.tempScriptCounter =0;
   this.noCheckScriptFlag ;
+  this.ScreenStatus;
   this.jumpLabelList = new Array;
 
   this.resourceManager;
@@ -122,6 +123,7 @@ function vnEngine(){
 
 
   this.initGameEnvirontment = function(){
+    console.log("masuk sini?");
     this.graphicsManager.createDialogBox();
   }
 
@@ -145,11 +147,21 @@ function vnEngine(){
   //Memunculkan menu ketika klik kanan
   this.checkNextScript = function(ev){
       if (ev.nativeEvent.which == 3 ||ev.nativeEvent.button == 2 ){
+        if(vnEngine.ScreenStatus == 3){
+          vnEngine.noCheckScriptFlag = false;
+          vnEngine.stage.removeChildAt(vnEngine.stage.getNumChildren()-1);
+          vnEngine.ScreenStatus=2;
+        }
+        else{
+        vnEngine.noCheckScriptFlag = true;
+        vnEngine.ScreenStatus =3;
+        vnEngine.initRightClickMenu();
       }
-      else if(vnEngine.noCheckScriptFlag == false){
+      }
+      else if (vnEngine.noCheckScriptFlag == false){
         vnEngine.checkScript();
       }
-  }
+    }
 
   //Menjalankan Script selanjutnya
   //bertugas memilah & menjalankan perintah dari script
@@ -249,6 +261,7 @@ function vnEngine(){
   }
 }
   this.initMenu = function(){
+    vnEngine.stage.removeAllChildren();
     var res = vnEngine.resourceManager.getResource("menu").img;
     var container = new Container();
     var bitmap = new Bitmap(res);
@@ -260,15 +273,29 @@ function vnEngine(){
     container.addChild(bitmap);
     var y =this.canvas.height*3/5;
 
-    var startGameButton = new Button("Start Game",{perform:{type:'jumpTo', jumpLabel:'startGame'}},0,y,this.canvas.width,30);
+    var startGameButton = new Button("Start Game",{perform:undefined},0,y,this.canvas.width,30);
+    startGameButton.onClick = function(e){
+      if(e.target.parent.parent.isContainer == "true"){
+        vnEngine.stage.removeChild(e.target.parent.parent);
+      }
+      else{
+       vnEngine.stage.removeChild(e.target.parent);
+      }
+
+        vnEngine.noCheckScriptFlag = false;
+        vnEngine.checkScript({type:'jumpTo', jumpLabel:'startGame'});
+
+
+    }
+
     var loadButton = new Button("Load",{perform: undefined},0, y+40, this.canvas.width,30);
-    var optionButton = new Button("Option",{perform: undefined},0, y+80, this.canvas.width,30);
-    optionButton.onClick = function(){
+    var settingsButton = new Button("Settings",{perform: undefined},0, y+80, this.canvas.width,30);
+    settingsButton.onClick = function(){
       container.visible = false;
       vnEngine.checkScript({type:'showSettingsMenu'});
     }
     container.addChild(startGameButton);
-    container.addChild(optionButton);
+    container.addChild(settingsButton);
     container.addChild(loadButton);
     this.stage.addChild(container);
   }
@@ -346,7 +373,40 @@ function vnEngine(){
     vnEngine.stage.addChild(container);
   }
 
+  this.initRightClickMenu = function(){
+    var container = new Container();
+    var background = new Graphics();
+    background.beginFill(Graphics.getRGB(0,0,0,0.4));
 
+    var x = this.canvas.width *4/5;
+    var y = 0;
+    var w = 1/5*this.canvas.width;
+    var h = vnEngine.canvas.height - (2/4 * vnEngine.canvas.height) 
+    background.drawRect(x,y,w,h);
+    var bgShape = new Shape(background);
+
+    var saveButton = new Button("Save",{perform:undefined},x,y+60,w,30);
+    var loadButton = new Button("Load",{perform:undefined},x,y+100,w,30);
+    var settingsButton = new Button("Settings",{perform:undefined},x,y+140,w,30);
+    settingsButton.onClick = function(){
+      vnEngine.checkScript({type:'showSettingsMenu'});
+    }
+    var returnToTitleButton = new Button("Return to title",{perform:undefined},x,y+180,w,30);
+    returnToTitleButton.onClick - function(){
+      vnEngine.checkScript({type:'initMenu'});
+    }
+
+
+
+    container.addChild(bgShape);
+    container.addChild(saveButton);
+    container.addChild(loadButton);
+    container.addChild(settingsButton);
+    container.addChild(returnToTitleButton);
+
+    this.stage.addChild(container);
+
+  }
   this.scriptIf = function(script){
     var exp1 = script.exp1;
     var exp2 = script.exp2;
@@ -378,7 +438,6 @@ function vnEngine(){
     var data;
     for (var i = 0;i<optionList.length;i++){
       if(i%2 == 0){
-        //container.addChild(shape);
         data = {perform : optionList[i].perform};
         var button  = new Button(optionList[i].caption,data,0,heightGenap,this.canvas.width,30);
         container.addChild(button);
@@ -475,7 +534,6 @@ function Button(text,data,x,y,width,height){
 
   container.onMouseOver = function(e){
     if(container.isVisible ()){
-      console.log(container.isVisible());
       var obj = e.target.children[0];
       vnEngine.soundController.playEffect("sfxClick");
       obj.graphics.clear();
@@ -494,16 +552,9 @@ function Button(text,data,x,y,width,height){
   }
 
   container.onClick =function(e){
-    if(container.isVisible ()){
-      if(e.target.parent.parent.isContainer == "true"){
-        vnEngine.stage.removeChild(e.target.parent.parent);
-      }
-      else{
-       vnEngine.stage.removeChild(e.target.parent);
-      }
-        vnEngine.noCheckScriptFlag = false;
-        vnEngine.checkScript(e.target.children[0].data.perform);
-    }
+    vnEngine.checkScript(e.target.children[0].data.perform);
+    vnEngine.stage.removeChild(e.target.parent);
+    this.noCheckScriptFlag = true;
   }
   return container;
 }
@@ -521,7 +572,7 @@ function GraphicsManager(){
       bitmap.x =0;
       bitmap.y = 0;
       bitmap.onClick = vnEngine.checkNextScript;
-      vnEngine.stage.addChildAt(bitmap,this.backgroundIndex);
+      vnEngine.stage.addChildAt(bitmap,0);
     }
     else{
       var bitmap = new Bitmap(res);
@@ -597,7 +648,6 @@ function GraphicsManager(){
     var shape = new Shape(textRect);
     shape.onClick = vnEngine.checkNextScript;
     vnEngine.stage.addChild(shape);
-    Tween.get(shape).to({alpha:0}).wait(100).to({alpha:1},300);
     vnEngine.checkScript();
   }
 }
