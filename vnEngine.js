@@ -79,19 +79,17 @@ function vnEngine(){
   this.stage;
   this.context;
 
-  this.speakTextDisplayObject = undefined;
 
   this.flagList = new Array;
   this.scriptCounter;
   this.tempScriptQueue = new Array;
   this.tempScriptCounter =0;
-  this.noCheckScriptFlag ;
-  this.ScreenStatus;
   this.jumpLabelList = new Array;
 
   this.resourceManager;
   this.soundController;
   this.graphicsManager;
+  this.stateManager;
 
   this.initGame = function(canvasId){
     //Bind canvas to easel JS
@@ -107,13 +105,12 @@ function vnEngine(){
     Ticker.setFPS(20);
     Ticker.addListener(this.stage,false);
 
-    this.noCheckScriptFlag = false;
-
     //Setup sound Controller
     this.graphicsManager = new GraphicsManager();
 
     this.soundController = new SoundController(); 
 
+    this.stateManager = new StateManager();
 
     //start loading resource
     this.resourceManager = new ResourceManager(this.stage);
@@ -123,7 +120,7 @@ function vnEngine(){
 
 
   this.initGameEnvirontment = function(){
-    vnEngine.ScreenStatus =2;
+    this.stateManager.ScreenStatus =2;
     this.graphicsManager.createDialogBox();
   }
 
@@ -147,18 +144,24 @@ function vnEngine(){
   //Memunculkan menu ketika klik kanan
   this.checkNextScript = function(ev){
       if (ev.nativeEvent.which == 3 ||ev.nativeEvent.button == 2 ){
-        if(vnEngine.ScreenStatus == 3){
-          vnEngine.noCheckScriptFlag = false;
+        if(vnEngine.stateManager.ScreenStatus == 3){
+          vnEngine.stateManager.noCheckScriptFlag = vnEngine.stateManager.tempState;
           vnEngine.stage.removeChildAt(vnEngine.stage.getNumChildren()-1);
-          vnEngine.ScreenStatus=2;
+
+          if(vnEngine.stage.getChildAt(vnEngine.stage.getNumChildren()-1).clickable == false){
+          vnEngine.stage.getChildAt(vnEngine.stage.getNumChildren()-1).clickable = true;
+          }
+
+          vnEngine.stateManager.ScreenStatus=2;
         }
         else{
-        vnEngine.noCheckScriptFlag=true;
-        vnEngine.ScreenStatus = 3;
+        vnEngine.stateManager.tempState = vnEngine.stateManager.noCheckScriptFlag;
+        vnEngine.stateManager.noCheckScriptFlag=true;
+        vnEngine.stateManager.ScreenStatus = 3;
         vnEngine.initRightClickMenu();
       }
       }
-      else if (vnEngine.noCheckScriptFlag == false){
+      else if (vnEngine.stateManager.noCheckScriptFlag == false){
         vnEngine.checkScript();
       }
     }
@@ -262,8 +265,11 @@ function vnEngine(){
   }
 }
   this.initMenu = function(){
+    //Clear all game resource
     vnEngine.stage.removeAllChildren();
-    vnEngine.ScreenStatus = 1;
+    vnEngine.stateManager.clearAllState();
+
+    vnEngine.stateManager.ScreenStatus = 1;
     var res = vnEngine.resourceManager.getResource("menu").img;
     var container = new Container();
     var bitmap = new Bitmap(res);
@@ -285,11 +291,8 @@ function vnEngine(){
       else{
        vnEngine.stage.removeChild(e.target.parent);
       }
-
-        vnEngine.noCheckScriptFlag = false;
+        vnEngine.stateManager.noCheckScriptFlag = false;
         vnEngine.checkScript({type:'jumpTo', jumpLabel:'startGame'});
-
-
     }
 
     var loadButton = new Button("Load",{perform: undefined},0, y+40, this.canvas.width,30);
@@ -379,6 +382,10 @@ function vnEngine(){
   }
 
   this.initRightClickMenu = function(){
+    if(vnEngine.stage.getChildAt(vnEngine.stage.getNumChildren()-1).clickable){
+      vnEngine.stage.getChildAt(vnEngine.stage.getNumChildren()-1).clickable = false;
+    }
+
     var container = new Container();
     var background = new Graphics();
     background.beginFill(Graphics.getRGB(0,0,0,0.4));
@@ -441,23 +448,47 @@ function vnEngine(){
     var heightGanjil = (this.canvas.height - (1/4 * this.canvas.height))*(2/4)+40;
     var heightGenap = (this.canvas.height - (1/4 * this.canvas.height))*(2/4);
     var container = new Container();
+    container.clickable = true;
     var data;
+
+    var onClickFunction = function(e){
+      if(e.target.parent.clickable){
+      vnEngine.stateManager.noCheckScriptFlag = false;
+      vnEngine.checkScript(e.target.children[0].data.perform);
+      vnEngine.stage.removeChild(e.target.parent);
+      }
+    }
+
+    var onMouseOverFunction = function(e){
+      if(e.target.parent.clickable){
+        var obj = e.target.children[0];
+        vnEngine.soundController.playEffect("sfxClick");
+        obj.graphics.clear();
+        obj.graphics.beginFill(Graphics.getRGB(255,255,255,0.5));
+        obj.graphics.drawRect(obj.data.x,obj.data.y,obj.data.w,obj.data.h);
+      }
+    }
+
     for (var i = 0;i<optionList.length;i++){
       if(i%2 == 0){
         data = {perform : optionList[i].perform};
         var button  = new Button(optionList[i].caption,data,0,heightGenap,this.canvas.width,30);
+        button.onClick = onClickFunction;
+        button.onMouseOver= onMouseOverFunction
         container.addChild(button);
         heightGenap-=40;;  
       }
       else{
         data = {perform : optionList[i].perform};
         var button  = new Button(optionList[i].caption,data,0,heightGanjil,this.canvas.width,30);
+        button.onClick = onClickFunction;
+        button.onMouseOver= onMouseOverFunction
         container.addChild(button);
         heightGanjil+=40;
       }
     }
   this.stage.addChild(container);
-  this.noCheckScriptFlag = true;
+  this.stateManager.noCheckScriptFlag = true;
   }
 
   this.editFlag = function (flagLabel , flagValue){
@@ -486,7 +517,7 @@ function vnEngine(){
   }
 
   this.speak = function (character , speak){
-    if(this.speakTextDisplayObject == undefined){
+    if(this.stateManager.speakTextDisplayObject == undefined){
       var txt = new Text(speak,"17px arial","#FFF");
       txt.x = 30;
       txt.y = this.canvas.height-this.canvas.height/8;
@@ -495,11 +526,11 @@ function vnEngine(){
       chara.x = 30;
       chara.y = this.canvas.height-this.canvas.height/5;
       this.stage.addChild(chara);
-      this.speakTextDisplayObject = chara;
+      this.stateManager.speakTextDisplayObject = chara;
     }
     else{
-      this.speakTextDisplayObject.text =character;
-      this.stage.getChildAt(this.stage.getChildIndex(this.speakTextDisplayObject)-1).text = speak;
+      this.stateManager.speakTextDisplayObject.text =character;
+      this.stage.getChildAt(this.stage.getChildIndex(this.stateManager.speakTextDisplayObject)-1).text = speak;
     }
   }
 
@@ -539,26 +570,26 @@ function Button(text,data,x,y,width,height){
 
 
   container.onMouseOver = function(e){
-    if(container.isVisible ()){
+    //if(container.isVisible ()){
       var obj = e.target.children[0];
       vnEngine.soundController.playEffect("sfxClick");
       obj.graphics.clear();
       obj.graphics.beginFill(Graphics.getRGB(255,255,255,0.5));
       obj.graphics.drawRect(obj.data.x,obj.data.y,obj.data.w,obj.data.h);
-    }
+    //}
   }
 
   container.onMouseOut =function(e){
-    if(container.isVisible ()){
+    //if(container.isVisible ()){
       var obj = e.target.children[0];
       obj.graphics.clear();
       obj.graphics.beginFill(Graphics.getRGB(0,0,0,0.5));
       obj.graphics.drawRect(obj.data.x,obj.data.y,obj.data.w,obj.data.h);
-    }
+    //}
   }
 
   container.onClick =function(e){
-    vnEngine.noCheckScriptFlag = false;
+    vnEngine.stateManager.noCheckScriptFlag = false;
     vnEngine.checkScript(e.target.children[0].data.perform);
     vnEngine.stage.removeChild(e.target.parent);
   }
@@ -574,10 +605,9 @@ function GraphicsManager(){
     bitmap.x =0;
     bitmap.y = 0;
     bitmap.isBackground = true;
-    if(vnEngine.ScreenStatus ==2){
+    if(vnEngine.stateManager.ScreenStatus ==2){
       bitmap.onClick = vnEngine.checkNextScript;
     }
-
 
     if(vnEngine.stage.getNumChildren() >0){
       if(vnEngine.stage.getChildAt(0).isBackground){
