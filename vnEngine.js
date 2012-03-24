@@ -149,25 +149,25 @@ function vnEngine(){
   //bertugas memilah & menjalankan perintah dari script
   this.checkScript = function(scriptArray){
      if(scriptArray != undefined){
-      this.tempScriptQueue.splice(0,this.tempScriptQueue.length);
+      this.stateManager.tempScriptQueue.splice(0,this.stateManager.tempScriptQueue.length);
         if(scriptArray.length == undefined){
-           this.tempScriptQueue.push(scriptArray);
+           this.stateManager.tempScriptQueue.push(scriptArray);
         }
         else{
           for(var i = 0 ; i <scriptArray.length;i++){
-            this.tempScriptQueue.push(scriptArray[i]);
+            this.stateManager.tempScriptQueue.push(scriptArray[i]);
             }
         }
-        this.tempScriptCounter = 0;
+        this.stateManager.tempScriptCounter = 0;
      }
 
-     if(this.tempScriptCounter < this.tempScriptQueue.length){
-      this.tempScriptCounter++;
-      this.parseScript(this.tempScriptQueue,this.tempScriptCounter);
+     if(this.stateManager.tempScriptCounter < this.stateManager.tempScriptQueue.length){
+      this.stateManager.tempScriptCounter++;
+      this.parseScript(this.stateManager.tempScriptQueue,this.stateManager.tempScriptCounter);
      }
      else{
-      this.scriptCounter++;
-      this.parseScript(script,this.scriptCounter);
+      this.stateManager.scriptCounter++;
+      this.parseScript(script,this.stateManager.scriptCounter);
     }
   }
 
@@ -205,14 +205,7 @@ function vnEngine(){
       case 'pauseScript':
       break;
       case 'jumpTo' :
-        var index = arrayIndexOf(this.jumpLabelList,"jumpLabel",script[scriptCounter-1].jumpLabel);
-        if(index != -1){
-          this.scriptCounter = this.jumpLabelList[index].scriptCounter;
-          this.checkScript();
-        }
-        else{
-          alert("Script Error");
-        }
+        this.scriptJump(script[scriptCounter-1].jumpLabel);
       break;
       case 'if':
        this.scriptIf(script[scriptCounter-1]);
@@ -222,7 +215,7 @@ function vnEngine(){
         this.checkScript();
       break;
       case 'editFlag':
-        this.editFlag(script[scriptCounter-1].flagLabel ,script[scriptCounter-1].flagValue);
+        this.stateManager.editFlag(script[scriptCounter-1].flagLabel ,script[scriptCounter-1].flagValue);
       break;
       case 'playBGM':
         this.soundController.playBGM(script[scriptCounter-1].soundLabel);
@@ -390,9 +383,6 @@ function vnEngine(){
       vnEngine.soundController.stopBGM();
       vnEngine.checkScript({type:'initMenu'});
     }
-
-
-
     container.addChild(bgShape);
     container.addChild(saveButton);
     container.addChild(loadButton);
@@ -402,16 +392,28 @@ function vnEngine(){
     this.stage.addChild(container);
 
   }
+
+  this.scriptJump = function(jumpLabel){
+    var index = arrayIndexOf(this.stateManager.jumpLabelList,"jumpLabel",jumpLabel);
+      if(index != -1){
+        this.stateManager.scriptCounter = this.stateManager.jumpLabelList[index].scriptCounter;
+        this.checkScript();
+      }
+      else{
+        alert("Script Error");
+      }
+  }
+
   this.scriptIf = function(script){
     var exp1 = script.exp1;
     var exp2 = script.exp2;
 
     if(exp1.type == 'getFlag'){
-      exp1 = this.getFlag(exp1.flagLabel);
+      exp1 = this.stateManager.getFlag(exp1.flagLabel);
     }
       
     if(exp2.type == 'getFlag'){
-       exp2 = this.getFlag(exp2.flagLabel);
+       exp2 = this.stateManager.getFlag(exp2.flagLabel);
     }
 
     var op = script.op;
@@ -461,27 +463,6 @@ function vnEngine(){
   this.stateManager.noCheckScriptFlag = true;
   }
 
-  this.editFlag = function (flagLabel , flagValue){
-    var index  = arrayIndexOf(this.flagList,"flagLabel",flagLabel);
-    if(index != -1){
-        this.flagList[index].flagValue = flagValue;
-      }
-      else{
-        alert("script error");
-      }
-      this.checkScript();
-  }
-
-  this.getFlag = function (flagLabel){
-    var index  = arrayIndexOf(this.flagList,"flagLabel",flagLabel);
-    if(index != -1){
-        return this.flagList[index].flagValue;
-      }
-      else{
-        alert("script error");
-      }
-  }
-
   this.scriptDelay = function(ms){
     setTimeout("vnEngine.checkScript()",ms);
   }
@@ -503,8 +484,6 @@ function vnEngine(){
       this.stage.getChildAt(this.stage.getChildIndex(this.stateManager.speakTextDisplayObject)-1).text = speak;
     }
   }
-
-
 }
 
 function arrayIndexOf(array, obj,value) {
