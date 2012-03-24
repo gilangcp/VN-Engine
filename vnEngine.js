@@ -605,13 +605,14 @@ function GraphicsManager(){
 
     if(vnEngine.stage.getNumChildren() >0){
       if(vnEngine.stage.getChildAt(0).isBackground){
+        vnEngine.stateManager.noCheckScriptFlag = true;
         var old = vnEngine.stage.getChildAt(0);
         vnEngine.stage.removeChildAt(0);
         vnEngine.stage.addChildAt(bitmap,0);
         vnEngine.stage.addChildAt(old,0);
-        Tween.get(bitmap).to({alpha:0}).to({alpha:1},300).call(function(){
-        vnEngine.stage.removeChildAt(0);      
-        });
+        Tween.get(bitmap).to({alpha:0}).to({alpha:1},300)
+        .call(function(){
+        vnEngine.stage.removeChildAt(0);vnEngine.stateManager.noCheckScriptFlag = false;});
       }
       else{
       vnEngine.stage.addChildAt(bitmap,0);

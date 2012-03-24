@@ -34,7 +34,9 @@ function SoundController(){
 	}
 
 	this.playEffect = function(soundLabel){
+		if(this.sfxVolume > 1){
     	soundManager.play(soundLabel , {volume : this.sfxVolume});
+    	}
   	}
 
   	this.stopBGM = function(){
