@@ -79,13 +79,6 @@ function vnEngine(){
   this.stage;
   this.context;
 
-
-  this.flagList = new Array;
-  this.scriptCounter;
-  this.tempScriptQueue = new Array;
-  this.tempScriptCounter =0;
-  this.jumpLabelList = new Array;
-
   this.resourceManager;
   this.soundController;
   this.graphicsManager;
@@ -97,20 +90,21 @@ function vnEngine(){
     document.getElementById(canvasId).oncontextmenu=new Function ("return false");
     this.context = this.canvas.getContext("2d");
 
-    this.initScript();
+    //setup sound Controller ,GraphicsManager and stateManager
+    this.graphicsManager = new GraphicsManager();
+    this.soundController = new SoundController(); 
+    this.stateManager = new StateManager();
 
-    //create easel js canvas  
+    //Check Script for any jump & flag
+    //Put every jump label into array 
+    this.stateManager.initScript();
+
+    //create & configure easel js canvas  
     this.stage = new Stage(this.canvas);
     this.stage.enableMouseOver()
     Ticker.setFPS(20);
     Ticker.addListener(this.stage,false);
 
-    //Setup sound Controller
-    this.graphicsManager = new GraphicsManager();
-
-    this.soundController = new SoundController(); 
-
-    this.stateManager = new StateManager();
 
     //start loading resource
     this.resourceManager = new ResourceManager(this.stage);
@@ -124,21 +118,6 @@ function vnEngine(){
     this.graphicsManager.createDialogBox();
   }
 
-  //Mengecek Script, Menandai baris pada
-  //Jump Label
-  //Mungkin nanti bisa di generate, tgl di load
-  this.initScript =function(){
-    for(var i = 0; i<script.length;i++){
-      switch (script[i].type){
-      case 'addJumpLabel': 
-        this.jumpLabelList.push({jumpLabel:script[i].jumpLabel , scriptCounter : i+1 });
-      break;
-      case 'addFlag':
-        this.flagList.push({flagLabel: script[i].flagLabel,flagValue :script[i].flagValue});
-      break;
-      }
-    }
-  }
 
   //Nantinya fungsi ini akan mengatur cepat jalanya script + 
   //Memunculkan menu ketika klik kanan
