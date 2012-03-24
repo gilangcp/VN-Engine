@@ -272,6 +272,7 @@ function vnEngine(){
     vnEngine.stateManager.ScreenStatus = 1;
     var res = vnEngine.resourceManager.getResource("menu").img;
     var container = new Container();
+    container.clickable = true;
     var bitmap = new Bitmap(res);
 
     bitmap.scaleY =  this.canvas.height / res.height;
@@ -283,8 +284,8 @@ function vnEngine(){
 
     var y =this.canvas.height*3/5;
 
-    var startGameButton = new Button("Start Game",{perform:undefined},0,y,this.canvas.width,30);
-    startGameButton.onClick = function(e){
+    var startGameButton = new Button("Start Game",0,y,this.canvas.width,30);
+    startGameButton.onClickListener = function(e){
       if(e.target.parent.parent.isContainer == "true"){
         vnEngine.stage.removeChild(e.target.parent.parent);
       }
@@ -295,10 +296,10 @@ function vnEngine(){
         vnEngine.checkScript({type:'jumpTo', jumpLabel:'startGame'});
     }
 
-    var loadButton = new Button("Load",{perform: undefined},0, y+40, this.canvas.width,30);
-    var settingsButton = new Button("Settings",{perform: undefined},0, y+80, this.canvas.width,30);
-    settingsButton.onClick = function(){
-      container.visible = false;
+    var loadButton = new Button("Load",0, y+40, this.canvas.width,30);
+    var settingsButton = new Button("Settings",0, y+80, this.canvas.width,30);
+    settingsButton.onClickListener = function(){
+      container.clickable = false;
       vnEngine.checkScript({type:'showSettingsMenu'});
     }
     container.addChild(startGameButton);
@@ -308,9 +309,8 @@ function vnEngine(){
   }
 
   this.initSettingsMenu = function(){
-    //vnEngine.ScreenStatus = 4;
     var container = new Container();
-
+    container.clickable =true;
     var res = vnEngine.resourceManager.getResource("settings").img;
 
     var bitmap = new Bitmap(res);
@@ -357,14 +357,16 @@ function vnEngine(){
       vnEngine.soundController.changeSoundEffectVolume(e);
     }
 
-    var backButton = new Button("back",{perform: undefined},bgLayerW-100,bgLayerH-30,100,30);
-    backButton.onClick=function(e){
+    var backButton = new Button("back",bgLayerW-100,bgLayerH-30,100,30);
+    backButton.onClickListener=function(e){
+      if(vnEngine.stage.getChildAt(vnEngine.stage.getNumChildren()-2).clickable == false){
+        vnEngine.stage.getChildAt(vnEngine.stage.getNumChildren()-2).clickable = true;
+      }
       vnEngine.stage.removeChild(container);
-      vnEngine.stage.getChildAt(vnEngine.stage.getNumChildren()-1).visible = true;
     }
 
-    var revertToDefaultButton = new Button("Revert To Default",{perform: undefined},bgLayerW-250,bgLayerH-30,140,30);
-    revertToDefaultButton.onClick = function(e){
+    var revertToDefaultButton = new Button("Revert To Default",bgLayerW-250,bgLayerH-30,140,30);
+    revertToDefaultButton.onClickListener = function(e){
        bgmSlider.setBarPosition(50);
        sfxSlider.setBarPosition(50);
     }
@@ -385,8 +387,8 @@ function vnEngine(){
     if(vnEngine.stage.getChildAt(vnEngine.stage.getNumChildren()-1).clickable){
       vnEngine.stage.getChildAt(vnEngine.stage.getNumChildren()-1).clickable = false;
     }
-
     var container = new Container();
+    container.clickable = true;
     var background = new Graphics();
     background.beginFill(Graphics.getRGB(0,0,0,0.4));
 
@@ -397,14 +399,15 @@ function vnEngine(){
     background.drawRect(x,y,w,h);
     var bgShape = new Shape(background);
 
-    var saveButton = new Button("Save",{perform:undefined},x,y+60,w,30);
-    var loadButton = new Button("Load",{perform:undefined},x,y+100,w,30);
-    var settingsButton = new Button("Settings",{perform:undefined},x,y+140,w,30);
-    settingsButton.onClick = function(){
+    var saveButton = new Button("Save",x,y+60,w,30);
+    var loadButton = new Button("Load",x,y+100,w,30);
+    var settingsButton = new Button("Settings",x,y+140,w,30);
+    settingsButton.onClickListener = function(){
+      container.clickable = false;
       vnEngine.checkScript({type:'showSettingsMenu'});
     }
-    var returnToTitleButton = new Button("Return to title",{perform:undefined},x,y+180,w,30);
-    returnToTitleButton.onClick = function(){
+    var returnToTitleButton = new Button("Return to title",x,y+180,w,30);
+    returnToTitleButton.onClickListener = function(){
       vnEngine.soundController.stopBGM();
       vnEngine.checkScript({type:'initMenu'});
     }
@@ -451,38 +454,26 @@ function vnEngine(){
     container.clickable = true;
     var data;
 
-    var onClickFunction = function(e){
+    var onClickListenerFunction = function(e){
       if(e.target.parent.clickable){
       vnEngine.stateManager.noCheckScriptFlag = false;
-      vnEngine.checkScript(e.target.children[0].data.perform);
+      vnEngine.checkScript(e.target.data.perform);
       vnEngine.stage.removeChild(e.target.parent);
-      }
-    }
-
-    var onMouseOverFunction = function(e){
-      if(e.target.parent.clickable){
-        var obj = e.target.children[0];
-        vnEngine.soundController.playEffect("sfxClick");
-        obj.graphics.clear();
-        obj.graphics.beginFill(Graphics.getRGB(255,255,255,0.5));
-        obj.graphics.drawRect(obj.data.x,obj.data.y,obj.data.w,obj.data.h);
       }
     }
 
     for (var i = 0;i<optionList.length;i++){
       if(i%2 == 0){
-        data = {perform : optionList[i].perform};
-        var button  = new Button(optionList[i].caption,data,0,heightGenap,this.canvas.width,30);
-        button.onClick = onClickFunction;
-        button.onMouseOver= onMouseOverFunction
+        var button  = new Button(optionList[i].caption,0,heightGenap,this.canvas.width,30);
+        button.data = {perform : optionList[i].perform};
+        button.onClickListener = onClickListenerFunction;
         container.addChild(button);
         heightGenap-=40;;  
       }
       else{
-        data = {perform : optionList[i].perform};
-        var button  = new Button(optionList[i].caption,data,0,heightGanjil,this.canvas.width,30);
-        button.onClick = onClickFunction;
-        button.onMouseOver= onMouseOverFunction
+        var button  = new Button(optionList[i].caption,0,heightGanjil,this.canvas.width,30);
+        button.data = {perform : optionList[i].perform};
+        button.onClickListener = onClickListenerFunction;
         container.addChild(button);
         heightGanjil+=40;
       }
@@ -547,18 +538,19 @@ function arrayIndexOf(array, obj,value) {
   }
 
 
-function Button(text,data,x,y,width,height){
+function Button(text,x,y,width,height){
   var container = new Container();
+  container.onClickListener = undefined;
   var optionRect = new Graphics();
   optionRect.beginFill(Graphics.getRGB(0,0,0,0.5));
   optionRect.drawRect(x,y,width ,height);
 
   var shape = new Shape(optionRect);
-  shape.data = data;
-  shape.data.x = x;
-  shape.data.y = y;
-  shape.data.w =width;
-  shape.data.h = height;
+
+  shape.rectX = x;
+  shape.rectY = y;
+  shape.rectW = width;
+  shape.rectH = height;
 
 
   container.addChild(shape);
@@ -568,30 +560,32 @@ function Button(text,data,x,y,width,height){
   txt.y = y+20;
   container.addChild(txt);
 
-
   container.onMouseOver = function(e){
-    //if(container.isVisible ()){
+    if(e.target.parent.clickable || e.target.clickable){
       var obj = e.target.children[0];
       vnEngine.soundController.playEffect("sfxClick");
       obj.graphics.clear();
       obj.graphics.beginFill(Graphics.getRGB(255,255,255,0.5));
-      obj.graphics.drawRect(obj.data.x,obj.data.y,obj.data.w,obj.data.h);
-    //}
+      obj.graphics.drawRect(obj.rectX,obj.rectY,obj.rectW,obj.rectH);
+    }
   }
 
   container.onMouseOut =function(e){
-    //if(container.isVisible ()){
+    if(e.target.parent.clickable || e.target.clickable){
       var obj = e.target.children[0];
       obj.graphics.clear();
       obj.graphics.beginFill(Graphics.getRGB(0,0,0,0.5));
-      obj.graphics.drawRect(obj.data.x,obj.data.y,obj.data.w,obj.data.h);
-    //}
+      obj.graphics.drawRect(obj.rectX,obj.rectY,obj.rectW,obj.rectH);
+    }
   }
-
   container.onClick =function(e){
-    vnEngine.stateManager.noCheckScriptFlag = false;
-    vnEngine.checkScript(e.target.children[0].data.perform);
-    vnEngine.stage.removeChild(e.target.parent);
+  if(e.target.parent.clickable || e.target.clickable){
+      container.onMouseOut(e);
+      if(container.onClickListener!=undefined )
+      {
+        container.onClickListener(e);
+      }
+    }
   }
   return container;
 }
