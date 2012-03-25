@@ -192,15 +192,18 @@ function vnEngine(){
         break;
       case 'changeBackground':
         this.graphicsManager.changeBackground(script[scriptCounter-1].imageLabel);
+        vnEngine.checkScript();
         break;
       case 'delay' :
         this.scriptDelay(script[scriptCounter-1].ms);
         break;
-      case 'showCharacter' :
+      case 'showCharacter':
         this.graphicsManager.showCharacter(script[scriptCounter-1].imageLabel,script[scriptCounter-1].position);
+        vnEngine.checkScript();
         break;
       case 'hideCharacter':
         this.graphicsManager.hideCharacter(script[scriptCounter-1].position);
+        vnEngine.checkScript();
       break;
       case 'pauseScript':
       break;
@@ -218,6 +221,9 @@ function vnEngine(){
         this.stateManager.editFlag(script[scriptCounter-1].flagLabel ,script[scriptCounter-1].flagValue);
       break;
       case 'playBGM':
+        if(this.soundController.bgm != undefined){
+          this.stateManager.bgm = this.soundController.bgm;
+        }
         this.soundController.playBGM(script[scriptCounter-1].soundLabel);
         vnEngine.checkScript();
       break;
@@ -372,7 +378,15 @@ function vnEngine(){
     var bgShape = new Shape(background);
 
     var saveButton = new Button("Save",x,y+60,w,30);
+    saveButton.onClickListener = function(){
+      vnEngine.stateManager.saveState();
+    }
+
     var loadButton = new Button("Load",x,y+100,w,30);
+    loadButton.onClickListener = function(){
+      vnEngine.stateManager.loadState();
+    }
+
     var settingsButton = new Button("Settings",x,y+140,w,30);
     settingsButton.onClickListener = function(){
       container.clickable = false;
@@ -437,9 +451,10 @@ function vnEngine(){
 
     var onClickListenerFunction = function(e){
       if(e.target.parent.clickable){
-      vnEngine.stateManager.noCheckScriptFlag = false;
-      vnEngine.checkScript(e.target.data.perform);
-      vnEngine.stage.removeChild(e.target.parent);
+        vnEngine.stateManager.chooseOptionNumber=e.target.no;
+        vnEngine.stateManager.noCheckScriptFlag = false;
+        vnEngine.checkScript(e.target.data.perform);
+        vnEngine.stage.removeChild(e.target.parent);
       }
     }
 
@@ -447,6 +462,7 @@ function vnEngine(){
       if(i%2 == 0){
         var button  = new Button(optionList[i].caption,0,heightGenap,this.canvas.width,30);
         button.data = {perform : optionList[i].perform};
+        button.no = i;
         button.onClickListener = onClickListenerFunction;
         container.addChild(button);
         heightGenap-=40;;  
@@ -454,6 +470,7 @@ function vnEngine(){
       else{
         var button  = new Button(optionList[i].caption,0,heightGanjil,this.canvas.width,30);
         button.data = {perform : optionList[i].perform};
+        button.no = i;
         button.onClickListener = onClickListenerFunction;
         container.addChild(button);
         heightGanjil+=40;
@@ -549,7 +566,9 @@ function Button(text,x,y,width,height){
 }
 
 function GraphicsManager(){
-  this.changeBackground = function(imageLabel){
+  this.changeBackground = function(imageLabel,callback){
+    vnEngine.stateManager.backgroundImage = imageLabel; 
+    vnEngine.stateManager.backgroundImage = imageLabel; 
     var res  = vnEngine.resourceManager.getResource(imageLabel).img;
     var bitmap = new Bitmap(res);
     bitmap.scaleY =  vnEngine.canvas.height / res.height;
@@ -557,7 +576,7 @@ function GraphicsManager(){
     bitmap.x =0;
     bitmap.y = 0;
     bitmap.isBackground = true;
-    if(vnEngine.stateManager.ScreenStatus ==2){
+    if(vnEngine.stateManager.ScreenStatus ==2 || vnEngine.stateManager.ScreenStatus ==3){
       bitmap.onClick = vnEngine.checkNextScript;
     }
 
@@ -568,9 +587,17 @@ function GraphicsManager(){
         vnEngine.stage.removeChildAt(0);
         vnEngine.stage.addChildAt(bitmap,0);
         vnEngine.stage.addChildAt(old,0);
-        Tween.get(bitmap).to({alpha:0}).to({alpha:1},300)
-        .call(function(){
-        vnEngine.stage.removeChildAt(0);vnEngine.stateManager.noCheckScriptFlag = false;});
+        if(callback == undefined){
+          Tween.get(bitmap).to({alpha:0}).to({alpha:1},300)
+          .call(function(){
+          vnEngine.stage.removeChildAt(0);vnEngine.stateManager.noCheckScriptFlag = false;});
+        }
+        else{
+          Tween.get(bitmap).to({alpha:0}).to({alpha:1},300)
+          .call(function() {
+          vnEngine.stage.removeChildAt(0);vnEngine.stateManager.noCheckScriptFlag = false;callback();} );
+        }
+
       }
       else{
       vnEngine.stage.addChildAt(bitmap,0);
@@ -581,7 +608,6 @@ function GraphicsManager(){
       vnEngine.stage.addChild(bitmap);
       Tween.get(bitmap).to({alpha:0}).to({alpha:1},300);
     }
-    vnEngine.checkScript();
   } 
 
  this.showCharacter = function(chara , position){
@@ -597,7 +623,7 @@ function GraphicsManager(){
     
     switch(position){
       case 'left' :
-        bitmap.x = 1/3 * vnEngine.canvas.width *Yscaling/2;
+        bitmap.x = 1/4 * vnEngine.canvas.width *Yscaling/2;
       break;
       case 'right':
         bitmap.x = vnEngine.canvas.width  *3/4 - res.width*Yscaling /2;
@@ -609,10 +635,10 @@ function GraphicsManager(){
         alert("script Error");
       break;
   } 
+  //this.stateManager.displayCharacterList[position] = chara;
   bitmap.position = position;   
   vnEngine.stage.addChildAt(bitmap,1); 
   Tween.get(bitmap).to({alpha:0}).wait(100).to({alpha:1},300);
-  vnEngine.checkScript();
   }
 
   this.hideCharacter=function(position){
@@ -626,12 +652,12 @@ function GraphicsManager(){
       }
     }
       if (i+1 == vnEngine.stage.getNumChildren) {
-        alert("script error");
       }
       else{
         Tween.get(chara).to({alpha:0},100).call(vnEngine.stage.removeChild,
           [chara],vnEngine.stage);
-          vnEngine.checkScript();
+          vnEngine.stateManager.displayCharacterList[position] = undefined;
+
       }
   }
 
