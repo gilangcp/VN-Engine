@@ -72,6 +72,7 @@ function StateManager(){
   }
 
   this.saveState = function(){
+    console.log(this.displayCharacterList);
   	var state = {
   		SC   :this.scriptCounter,
   		TSQ  :this.tempScriptQueue,
@@ -100,8 +101,6 @@ function StateManager(){
 
       vnEngine.graphicsManager.changeBackground(state.BGI, function(){
         if(state.CHR.left!= undefined){
-
-          console.log("masuk sini");
           vnEngine.graphicsManager.hideCharacter("left");
           vnEngine.graphicsManager.showCharacter(state.CHR.left,"left");
         }else{
@@ -109,7 +108,6 @@ function StateManager(){
         }
 
         if(state.CHR.right!= undefined){
-          console.log("masuk sini2 ");
           vnEngine.graphicsManager.hideCharacter("right");
           vnEngine.graphicsManager.showCharacter(state.CHR.right,"right");
         }else{
@@ -117,22 +115,37 @@ function StateManager(){
         }
 
         if(state.CHR.center != undefined){
-          console.log("masuk sini3");
           vnEngine.graphicsManager.hideCharacter("center");
           vnEngine.graphicsManager.showCharacter(state.CHR.center,"center");
         }else{
           vnEngine.graphicsManager.hideCharacter("center");
         }
 
-       // vnEngine.stateManager.tempScriptQueue = state.TSQ;
-       // if(vnEngine.stateManager.tempScriptCounter >0){
-       // vnEngine.stateManager.tempScriptCounter = state.TSC-1;
-        //}
+       vnEngine.stateManager.tempScriptQueue = state.TSQ;
+       if(vnEngine.stateManager.tempScriptCounter >0){
+          vnEngine.stateManager.tempScriptCounter = state.TSC;
+        }
 
-        //vnEngine.stateManager.speakTextDisplayObject.text = state.SCH;
-        //vnEngine.stage.getChildAt(vnEngine.stage.getChildIndex(vnEngine.stateManager.speakTextDisplayObject)-1).text = state.SNA;
-        //vnEngine.stateManager.scriptCounter = state.SC;
-       console.log("state Loaded");
+        vnEngine.stateManager.speakTextDisplayObject.text = state.SCH;
+        vnEngine.stage.getChildAt(vnEngine.stage.getChildIndex(vnEngine.stateManager.speakTextDisplayObject)-1).text = state.SNA;
+        vnEngine.stateManager.scriptCounter = state.SC;
+                 
+
+        //Remove rigth click menu
+        vnEngine.stateManager.noCheckScriptFlag = vnEngine.stateManager.tempState;
+        vnEngine.stage.removeChildAt(vnEngine.stage.getNumChildren()-1);
+        if(vnEngine.stage.getChildAt(vnEngine.stage.getNumChildren()-1).clickable == false){
+        vnEngine.stage.getChildAt(vnEngine.stage.getNumChildren()-1).clickable = true;
+        }
+        vnEngine.stateManager.ScreenStatus=2;
+
+        //Option
+        if(script[vnEngine.stateManager.scriptCounter-1].type == "option"){
+          vnEngine.stateManager.scriptCounter--;
+          vnEngine.checkScript();
+        }
+
+       console.log("state Loaded"); 
       });
   }
 }

@@ -595,7 +595,7 @@ function GraphicsManager(){
         else{
           Tween.get(bitmap).to({alpha:0}).to({alpha:1},300)
           .call(function() {
-          vnEngine.stage.removeChildAt(0);vnEngine.stateManager.noCheckScriptFlag = false;callback();} );
+          vnEngine.stage.removeChildAt(0);callback();} );
         }
 
       }
@@ -635,7 +635,7 @@ function GraphicsManager(){
         alert("script Error");
       break;
   } 
-  //this.stateManager.displayCharacterList[position] = chara;
+  vnEngine.stateManager.displayCharacterList[position] = chara;
   bitmap.position = position;   
   vnEngine.stage.addChildAt(bitmap,1); 
   Tween.get(bitmap).to({alpha:0}).wait(100).to({alpha:1},300);
@@ -651,13 +651,13 @@ function GraphicsManager(){
         }
       }
     }
-      if (i+1 == vnEngine.stage.getNumChildren) {
+      if (i == vnEngine.stage.getNumChildren()) {
+        console.log("character not found");
       }
       else{
         Tween.get(chara).to({alpha:0},100).call(vnEngine.stage.removeChild,
           [chara],vnEngine.stage);
           vnEngine.stateManager.displayCharacterList[position] = undefined;
-
       }
   }
 
