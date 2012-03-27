@@ -86,6 +86,7 @@ function StateManager(){
       SCH  :this.speakTextDisplayObject.text,
       SNA  :vnEngine.stage.getChildAt(vnEngine.stage.getChildIndex(this.speakTextDisplayObject)-1).text
   	};
+
   	localStorage.setItem("state",JSON.stringify(state));
   	console.log("state Saved");
   }
@@ -149,3 +150,4 @@ function StateManager(){
       });
   }
 }
+
