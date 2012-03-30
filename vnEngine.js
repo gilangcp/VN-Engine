@@ -71,6 +71,9 @@ var resourceList = new Array;
   resourceList.push({type :'snd',url  : 'resource/sfx/click.wav',soundLabel : 'sfxClick'});
   resourceList.push({type :'img',url  :'resource/image/3.jpg' , imageLabel:'menu'});
   resourceList.push({type :'img',url  :'resource/image/4.jpg' , imageLabel:'settings'});
+  resourceList.push({type :'img',url  :'resource/image/4.jpg' , imageLabel:'save'});
+
+
 
 function vnEngine(){
   var self = this;
@@ -114,7 +117,7 @@ function vnEngine(){
 
 
   this.initGameEnvirontment = function(){
-    this.stateManager.ScreenStatus =2;
+    this.stateManager.ScreenStatus ="game";
     this.graphicsManager.createDialogBox();
   }
 
@@ -122,21 +125,22 @@ function vnEngine(){
   //Nantinya fungsi ini akan mengatur cepat jalanya script + 
   //Memunculkan menu ketika klik kanan
   this.checkNextScript = function(ev){
-      if (ev.nativeEvent.which == 3 ||ev.nativeEvent.button == 2 ){
-        if(vnEngine.stateManager.ScreenStatus == 3){
+    console.log("masuk sini");
+    console.log(ev);
+    console.log(vnEngine.stateManager.getScreenStatus());
+      if (ev.nativeEvent.which == 3 || ev.nativeEvent.button == 2 ){
+        if(vnEngine.stateManager.getScreenStatus() == "rightClickMenu"){
           vnEngine.stateManager.noCheckScriptFlag = vnEngine.stateManager.tempState;
           vnEngine.stage.removeChildAt(vnEngine.stage.getNumChildren()-1);
-
           if(vnEngine.stage.getChildAt(vnEngine.stage.getNumChildren()-1).clickable == false){
           vnEngine.stage.getChildAt(vnEngine.stage.getNumChildren()-1).clickable = true;
           }
-
-          vnEngine.stateManager.ScreenStatus=2;
+          vnEngine.stateManager.setScreenStatus("game");
         }
-        else{
+        else if(vnEngine.stateManager.getScreenStatus() == "game"){
         vnEngine.stateManager.tempState = vnEngine.stateManager.noCheckScriptFlag;
         vnEngine.stateManager.noCheckScriptFlag=true;
-        vnEngine.stateManager.ScreenStatus = 3;
+        vnEngine.stateManager.setScreenStatus("rightClickMenu");
         vnEngine.initRightClickMenu();
       }
       }
@@ -242,12 +246,110 @@ function vnEngine(){
     }
   }
 }
+
+  this.initSaveLoadMenu = function(type){  
+    var container = new Container();
+    container.clickable =true;
+    var res = vnEngine.resourceManager.getResource("save").img;
+
+    var bitmap = new Bitmap(res);
+    bitmap.scaleY =  this.canvas.height / res.height;
+    bitmap.scaleX = this.canvas.width /  res.width;
+    bitmap.x =0;
+    bitmap.y = 0;
+
+
+    var bgLayer = new Graphics();
+    bgLayer.beginFill(Graphics.getRGB(0,0,0,0.5));
+
+    var bgLayerXY = vnEngine.canvas.height/20;
+    var bgLayerW = vnEngine.canvas.width- vnEngine.canvas.height/10;
+    var bgLayerH = vnEngine.canvas.height/10*9;
+    
+    bgLayer.drawRect(bgLayerXY,bgLayerXY, 
+    bgLayerW , bgLayerH);
+    var bgLayerShape = new Shape(bgLayer);
+
+    var saveLoadButtonContainer = new Container();
+    saveLoadButtonContainer.clickable =true;
+
+    var x = bgLayerXY +bgLayerW/10 ;
+    var y = bgLayerXY + bgLayerH/7;
+    var state = vnEngine.stateManager.getSaveStateInfo();
+
+
+    (function(self,type) {
+    self.saveLoadButtonClickListener= function(e){
+      if(type == "save"){
+        //stub for save game
+      }
+      else{
+        //Remove Container
+        if(vnEngine.stage.getChildAt(vnEngine.stage.getNumChildren()-2).clickable == false){
+          vnEngine.stage.getChildAt(vnEngine.stage.getNumChildren()-2).clickable = true;
+        }
+        vnEngine.stage.removeChild(container);
+
+        //load State
+        vnEngine.stateManager.loadState(e.target.state);
+      }
+    }
+  })(this,type);
+
+    for(var i =1 ; i < 9;i++){
+      if(state[i-1] == undefined){
+        var saveLoadDataButton = new Button("No Data",x,y,bgLayerW *8/10,30  );
+        saveLoadDataButton.onClickListener = this.saveLoadButtonClickListener;
+      }
+      else{
+        if(state[i-1].SNA.length >20){
+          var speak = state[i-1].SCH +' :'+state[i-1].SNA.substring(0,20) + '...';
+        }
+        else{
+          var speak = state[i-1].SCH +' :'+state[i-1].SNA;
+        }
+        var saveLoadDataButton = new Button(state[i-1].TIME + ' '+speak ,x,y,bgLayerW *8/10,30);
+        saveLoadDataButton.state = state[i-1];
+        saveLoadDataButton.onClickListener = this.saveLoadButtonClickListener;
+      }
+      y+=32;
+      saveLoadButtonContainer.addChild(saveLoadDataButton);
+    }
+
+  if(type == "save"){
+    var textMenu = new Text("SAVE" ,"17px arial","#FFF");
+    textMenu.y = bgLayerXY+ 30;
+    textMenu.x = vnEngine.canvas.width/2 - textMenu.getMeasuredWidth()/2;
+  }
+  else{
+    var textMenu = new Text("Load" ,"17px arial","#FFF");
+    textMenu.y = bgLayerXY+ 30;
+    textMenu.x = vnEngine.canvas.width/2 - textMenu.getMeasuredWidth()/2;
+  }
+
+  var backButton = new Button("back",bgLayerW-100,bgLayerH-30,100,30);
+  backButton.onClickListener=function(e){
+    if(vnEngine.stage.getChildAt(vnEngine.stage.getNumChildren()-2).clickable == false){
+      vnEngine.stage.getChildAt(vnEngine.stage.getNumChildren()-2).clickable = true;
+    }
+    vnEngine.stateManager.setScreenStatus(vnEngine.stateManager.getOldScreenStatus());
+    vnEngine.stage.removeChild(container);
+  }
+
+    container.addChild(bitmap);
+    container.addChild(bgLayerShape);
+    container.addChild(textMenu);
+    container.addChild(saveLoadButtonContainer);
+    container.addChild(backButton);
+    vnEngine.stage.addChild(container);
+  }
+
   this.initMenu = function(){
     //Clear all game resource
     vnEngine.stage.removeAllChildren();
     vnEngine.stateManager.clearAllState();
 
-    vnEngine.stateManager.ScreenStatus = 1;
+    vnEngine.stateManager.setScreenStatus("menu");
     var res = vnEngine.resourceManager.getResource("menu").img;
     var container = new Container();
     container.clickable = true;
@@ -275,6 +377,10 @@ function vnEngine(){
     }
 
     var loadButton = new Button("Load",0, y+40, this.canvas.width,30);
+    loadButton.onClickListener = function(){
+      container.clickable = false;
+      vnEngine.initSaveLoadMenu();
+    }
     var settingsButton = new Button("Settings",0, y+80, this.canvas.width,30);
     settingsButton.onClickListener = function(){
       container.clickable = false;
@@ -340,6 +446,8 @@ function vnEngine(){
       if(vnEngine.stage.getChildAt(vnEngine.stage.getNumChildren()-2).clickable == false){
         vnEngine.stage.getChildAt(vnEngine.stage.getNumChildren()-2).clickable = true;
       }
+
+      vnEngine.stateManager.setScreenStatus(vnEngine.stateManager.getOldScreenStatus());
       vnEngine.stage.removeChild(container);
     }
 
@@ -379,17 +487,22 @@ function vnEngine(){
 
     var saveButton = new Button("Save",x,y+60,w,30);
     saveButton.onClickListener = function(){
-      vnEngine.stateManager.saveState();
+      container.clickable = false;
+      vnEngine.stateManager.setScreenStatus("menu");
+      vnEngine.initSaveLoadMenu("save");
     }
 
     var loadButton = new Button("Load",x,y+100,w,30);
     loadButton.onClickListener = function(){
-      vnEngine.stateManager.loadState();
+      container.clickable = false;
+      vnEngine.stateManager.setScreenStatus("menu");
+      vnEngine.initSaveLoadMenu("load");
     }
 
     var settingsButton = new Button("Settings",x,y+140,w,30);
     settingsButton.onClickListener = function(){
       container.clickable = false;
+      vnEngine.stateManager.setScreenStatus("menu");
       vnEngine.checkScript({type:'showSettingsMenu'});
     }
     var returnToTitleButton = new Button("Return to title",x,y+180,w,30);
@@ -576,7 +689,7 @@ function GraphicsManager(){
     bitmap.x =0;
     bitmap.y = 0;
     bitmap.isBackground = true;
-    if(vnEngine.stateManager.ScreenStatus ==2 || vnEngine.stateManager.ScreenStatus ==3){
+    if(vnEngine.stateManager.getScreenStatus() =="game" || vnEngine.stateManager.getScreenStatus() =="rightClickMenu"){
       bitmap.onClick = vnEngine.checkNextScript;
     }
 

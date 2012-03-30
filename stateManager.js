@@ -3,7 +3,7 @@ function StateManager(){
 	this.ScreenStatus = 0;
 	this.noCheckScriptFlag =false;
 	this.tempState = undefined;
-
+  this.tempScreenStatus = undefined;
   this.scriptCounter = 0;
   this.tempScriptQueue = new Array;
   this.tempScriptCounter =0;
@@ -18,6 +18,7 @@ function StateManager(){
 
 	this.clearAllState = function(){
     this.currentImage = undefined;
+    this.tempScreenStatus = undefined;
 		this.speakTextDisplayObject = undefined;
 		this.ScreenStatus = 0;
 		this.noCheckScriptFlag =false;
@@ -71,9 +72,39 @@ function StateManager(){
       }
   }
 
-  this.saveState = function(){
-    console.log(this.displayCharacterList);
-  	var state = {
+  this.getOldScreenStatus = function(){
+    return this.tempScreenStatus;
+  }
+
+  this.getScreenStatus = function(){
+    return this.ScreenStatus;
+  }
+
+  this.setScreenStatus = function(state){
+    this.tempScreenStatus = this.ScreenStatus;
+    this.ScreenStatus = state;
+  }
+
+  this.saveState = function(no){
+  var no=5;
+  var state = JSON.parse(localStorage.getItem("state"));
+  if(state == undefined){
+    state = new Array;
+  }
+
+  var today = new Date();
+  var dd = today.getDate();
+  var mm = today.getMonth()+1; //January is 0!
+  var yyyy = today.getFullYear();
+  var hours = today.getHours();
+  var minutes = today.getMinutes();
+  if(dd<10){dd='0'+dd} if(mm<10){mm='0'+mm} var today = mm+'/'+dd+'/'+yyyy;
+  if (minutes < 10)
+  minutes = "0" + minutes;
+  var time = today +' '+ hours + ":" + minutes;
+  	state[no] = {
+      NO   :no,
+      TIME :time,
   		SC   :this.scriptCounter,
   		TSQ  :this.tempScriptQueue,
   		TSC  :this.tempScriptCounter,
@@ -86,68 +117,69 @@ function StateManager(){
       SCH  :this.speakTextDisplayObject.text,
       SNA  :vnEngine.stage.getChildAt(vnEngine.stage.getChildIndex(this.speakTextDisplayObject)-1).text
   	};
-
   	localStorage.setItem("state",JSON.stringify(state));
   	console.log("state Saved");
   }
 
-  this.loadState = function(){
+  this.getSaveStateInfo = function(){
+        return JSON.parse(localStorage.getItem("state"));
+  }
+
+  this.loadState = function(state){
    console.log("Loading state");
-  	var state = JSON.parse(localStorage.getItem("state"));
-      this.jumpLabelList = state.JLL;
-      this.flagList = state.FL;
-      this.defaultflagList = state.DFL;
+    this.jumpLabelList = state.JLL;
+    this.flagList = state.FL;
+    this.defaultflagList = state.DFL;
 
-      vnEngine.soundController.playBGM(state.BGM);
+    vnEngine.soundController.playBGM(state.BGM);
 
-      vnEngine.graphicsManager.changeBackground(state.BGI, function(){
-        if(state.CHR.left!= undefined){
-          vnEngine.graphicsManager.hideCharacter("left");
-          vnEngine.graphicsManager.showCharacter(state.CHR.left,"left");
-        }else{
-          vnEngine.graphicsManager.hideCharacter("left");
-        }
+    vnEngine.graphicsManager.changeBackground(state.BGI, function(){
+      if(state.CHR.left!= undefined){
+        vnEngine.graphicsManager.hideCharacter("left");
+        vnEngine.graphicsManager.showCharacter(state.CHR.left,"left");
+      }else{
+        vnEngine.graphicsManager.hideCharacter("left");
+      }
 
-        if(state.CHR.right!= undefined){
-          vnEngine.graphicsManager.hideCharacter("right");
-          vnEngine.graphicsManager.showCharacter(state.CHR.right,"right");
-        }else{
-          vnEngine.graphicsManager.hideCharacter("right");
-        }
+      if(state.CHR.right!= undefined){
+        vnEngine.graphicsManager.hideCharacter("right");
+        vnEngine.graphicsManager.showCharacter(state.CHR.right,"right");
+      }else{
+        vnEngine.graphicsManager.hideCharacter("right");
+      }
 
-        if(state.CHR.center != undefined){
-          vnEngine.graphicsManager.hideCharacter("center");
-          vnEngine.graphicsManager.showCharacter(state.CHR.center,"center");
-        }else{
-          vnEngine.graphicsManager.hideCharacter("center");
-        }
+      if(state.CHR.center != undefined){
+        vnEngine.graphicsManager.hideCharacter("center");
+        vnEngine.graphicsManager.showCharacter(state.CHR.center,"center");
+      }else{
+        vnEngine.graphicsManager.hideCharacter("center");
+      }
 
-       vnEngine.stateManager.tempScriptQueue = state.TSQ;
-       if(vnEngine.stateManager.tempScriptCounter >0){
-          vnEngine.stateManager.tempScriptCounter = state.TSC;
-        }
+     vnEngine.stateManager.tempScriptQueue = state.TSQ;
+     if(vnEngine.stateManager.tempScriptCounter >0){
+        vnEngine.stateManager.tempScriptCounter = state.TSC;
+      }
 
-        vnEngine.stateManager.speakTextDisplayObject.text = state.SCH;
-        vnEngine.stage.getChildAt(vnEngine.stage.getChildIndex(vnEngine.stateManager.speakTextDisplayObject)-1).text = state.SNA;
-        vnEngine.stateManager.scriptCounter = state.SC;
-                 
+      vnEngine.stateManager.speakTextDisplayObject.text = state.SCH;
+      vnEngine.stage.getChildAt(vnEngine.stage.getChildIndex(vnEngine.stateManager.speakTextDisplayObject)-1).text = state.SNA;
+      vnEngine.stateManager.scriptCounter = state.SC;
+               
 
-        //Remove rigth click menu
-        vnEngine.stateManager.noCheckScriptFlag = vnEngine.stateManager.tempState;
-        vnEngine.stage.removeChildAt(vnEngine.stage.getNumChildren()-1);
-        if(vnEngine.stage.getChildAt(vnEngine.stage.getNumChildren()-1).clickable == false){
-        vnEngine.stage.getChildAt(vnEngine.stage.getNumChildren()-1).clickable = true;
-        }
-        vnEngine.stateManager.ScreenStatus=2;
+      //Remove right click menu
+      vnEngine.stateManager.noCheckScriptFlag = vnEngine.stateManager.tempState;
+      vnEngine.stage.removeChildAt(vnEngine.stage.getNumChildren()-1);
+      if(vnEngine.stage.getChildAt(vnEngine.stage.getNumChildren()-1).clickable == false){
+      vnEngine.stage.getChildAt(vnEngine.stage.getNumChildren()-1).clickable = true;
+      }
+      vnEngine.stateManager.ScreenStatus=2;
 
-        //Option
-        if(script[vnEngine.stateManager.scriptCounter-1].type == "option"){
-          vnEngine.stateManager.scriptCounter--;
-          vnEngine.checkScript();
-        }
-
-       console.log("state Loaded"); 
-      });
+      //Option
+      if(script[vnEngine.stateManager.scriptCounter-1].type == "option"){
+        vnEngine.stateManager.scriptCounter--;
+        vnEngine.checkScript();
+      }
+     console.log("state Loaded"); 
+    });
   }
 }
 
