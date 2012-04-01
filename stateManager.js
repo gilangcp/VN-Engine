@@ -1,9 +1,10 @@
 function StateManager(){
+  self =this;
   this.speakTextDisplayObject = undefined;
 	this.ScreenStatus = 0;
 	this.noCheckScriptFlag =false;
 	this.tempState = undefined;
-
+  this.tempScreenStatus = undefined;
   this.scriptCounter = 0;
   this.tempScriptQueue = new Array;
   this.tempScriptCounter =0;
@@ -18,6 +19,7 @@ function StateManager(){
 
 	this.clearAllState = function(){
     this.currentImage = undefined;
+    this.tempScreenStatus = undefined;
 		this.speakTextDisplayObject = undefined;
 		this.ScreenStatus = 0;
 		this.noCheckScriptFlag =false;
@@ -71,68 +73,120 @@ function StateManager(){
       }
   }
 
-  this.saveState = function(){
-  	var state = {
-  		SC   :this.scriptCounter,
-  		TSQ  :this.tempScriptQueue,
-  		TSC  :this.tempScriptCounter,
-  		JLL  :this.jumpLabelList,
-  		FL   :this.flagList,
-  		DFL  :this.defaultflagList,
-  		BGM	 :this.bgm,
-  		CHR	 :this.displayCharacterList,
-  		BGI  :this.backgroundImage,
-      SCH  :this.speakTextDisplayObject.text,
-      SNA  :vnEngine.stage.getChildAt(vnEngine.stage.getChildIndex(this.speakTextDisplayObject)-1).text
+  this.getOldScreenStatus = function(){
+    return this.tempScreenStatus;
+  }
+
+  this.getScreenStatus = function(){
+    return this.ScreenStatus;
+  }
+
+  this.setScreenStatus = function(state){
+    this.tempScreenStatus = this.ScreenStatus;
+    this.ScreenStatus = state;
+  }
+
+  this.saveState = function(no){
+  var state = JSON.parse(localStorage.getItem("state"));
+  if(state == undefined){
+    state = new Array;
+  }
+
+  var today = new Date();
+  var dd = today.getDate();
+  var mm = today.getMonth()+1; //January is 0!
+  var yyyy = today.getFullYear();
+  var hours = today.getHours();
+  var minutes = today.getMinutes();
+  if(dd<10){dd='0'+dd} if(mm<10){mm='0'+mm} var today = mm+'/'+dd+'/'+yyyy;
+  if (minutes < 10)
+  minutes = "0" + minutes;
+  var time = today +' '+ hours + ":" + minutes;
+  	state[no] = {
+      NO   :no,
+      TIME :time,
+  		SC   :self.scriptCounter,
+  		JLL  :self.jumpLabelList,
+  		FL   :self.flagList,
+  		DFL  :self.defaultflagList,
+  		BGM	 :self.bgm,
+  		CHR	 :self.displayCharacterList,
+  		BGI  :self.backgroundImage,
+      SCH  :self.speakTextDisplayObject.text,
+      SNA  :vnEngine.stage.getChildAt(vnEngine.stage.getChildIndex(self.speakTextDisplayObject)-1).text
   	};
   	localStorage.setItem("state",JSON.stringify(state));
+    return state[no];
   	console.log("state Saved");
   }
 
-  this.loadState = function(){
-   console.log("Loading state");
-  	var state = JSON.parse(localStorage.getItem("state"));
-      this.jumpLabelList = state.JLL;
-      this.flagList = state.FL;
-      this.defaultflagList = state.DFL;
+  this.getSaveStateInfo = function(){
+    var data =JSON.parse(localStorage.getItem("state"));
+      if(data!=null)
+        return JSON.parse(localStorage.getItem("state"));
+      else return new Array;
+  }
 
-      vnEngine.soundController.playBGM(state.BGM);
+  this.loadState = function(state){
+    this.jumpLabelList = state.JLL;
+    this.flagList = state.FL;
+    this.defaultflagList = state.DFL;
 
-      vnEngine.graphicsManager.changeBackground(state.BGI, function(){
-        if(state.CHR.left!= undefined){
+    vnEngine.soundController.playBGM(state.BGM);
 
-          console.log("masuk sini");
-          vnEngine.graphicsManager.hideCharacter("left");
-          vnEngine.graphicsManager.showCharacter(state.CHR.left,"left");
-        }else{
-          vnEngine.graphicsManager.hideCharacter("left");
+    self.setScreenStatus("game");
+    vnEngine.graphicsManager.changeBackground(state.BGI, function(){
+      if(self.getOldScreenStatus() == "MAIN_MENU"){
+          vnEngine.graphicsManager.createDialogBox();
+          self.speakTextDisplayObject = undefined;
+          vnEngine.speak(state.SCH,state.SNA);
+      }
+      else{
+        vnEngine.speak(state.SCH,state.SNA);
+        //Remove right click menu
+        vnEngine.stateManager.noCheckScriptFlag = vnEngine.stateManager.tempState;
+        vnEngine.stage.removeChildAt(vnEngine.stage.getNumChildren()-1);
+        if(vnEngine.stage.getChildAt(vnEngine.stage.getNumChildren()-1).clickable == false){
+          vnEngine.stage.getChildAt(vnEngine.stage.getNumChildren()-1).clickable = true;
         }
+      }
 
-        if(state.CHR.right!= undefined){
-          console.log("masuk sini2 ");
-          vnEngine.graphicsManager.hideCharacter("right");
-          vnEngine.graphicsManager.showCharacter(state.CHR.right,"right");
-        }else{
-          vnEngine.graphicsManager.hideCharacter("right");
-        }
+      if(state.CHR.left!= undefined){
+        vnEngine.graphicsManager.hideCharacter("left");
+        vnEngine.graphicsManager.showCharacter(state.CHR.left,"left");
+      }else{
+        vnEngine.graphicsManager.hideCharacter("left");
+      }
 
-        if(state.CHR.center != undefined){
-          console.log("masuk sini3");
-          vnEngine.graphicsManager.hideCharacter("center");
-          vnEngine.graphicsManager.showCharacter(state.CHR.center,"center");
-        }else{
-          vnEngine.graphicsManager.hideCharacter("center");
-        }
+      if(state.CHR.right!= undefined){
+        vnEngine.graphicsManager.hideCharacter("right");
+        vnEngine.graphicsManager.showCharacter(state.CHR.right,"right");
+      }else{
+        vnEngine.graphicsManager.hideCharacter("right");
+      }
 
-       // vnEngine.stateManager.tempScriptQueue = state.TSQ;
-       // if(vnEngine.stateManager.tempScriptCounter >0){
-       // vnEngine.stateManager.tempScriptCounter = state.TSC-1;
-        //}
+      if(state.CHR.center != undefined){
+        vnEngine.graphicsManager.hideCharacter("center");
+        vnEngine.graphicsManager.showCharacter(state.CHR.center,"center");
+      }else{
+        vnEngine.graphicsManager.hideCharacter("center");
+      }
 
-        //vnEngine.stateManager.speakTextDisplayObject.text = state.SCH;
-        //vnEngine.stage.getChildAt(vnEngine.stage.getChildIndex(vnEngine.stateManager.speakTextDisplayObject)-1).text = state.SNA;
-        //vnEngine.stateManager.scriptCounter = state.SC;
-       console.log("state Loaded");
-      });
+      vnEngine.stateManager.scriptCounter = state.SC;
+      
+      if(vnEngine.stage.getChildAt(vnEngine.stage.getNumChildren()-1).isOption ==true){
+        vnEngine.stateManager.noCheckScriptFlag = false;
+        vnEngine.stage.removeChildAt(vnEngine.stage.getNumChildren()-1);
+      }
+
+      //Option
+      if(script[vnEngine.stateManager.scriptCounter-1].type == "option"){
+        vnEngine.stateManager.scriptCounter--;
+        vnEngine.checkScript();
+      }
+      console.log(vnEngine.stateManager.scriptCounter);
+     console.log("state Loaded"); 
+    });
   }
 }
+

@@ -71,6 +71,9 @@ var resourceList = new Array;
   resourceList.push({type :'snd',url  : 'resource/sfx/click.wav',soundLabel : 'sfxClick'});
   resourceList.push({type :'img',url  :'resource/image/3.jpg' , imageLabel:'menu'});
   resourceList.push({type :'img',url  :'resource/image/4.jpg' , imageLabel:'settings'});
+  resourceList.push({type :'img',url  :'resource/image/4.jpg' , imageLabel:'save'});
+
+
 
 function vnEngine(){
   var self = this;
@@ -114,29 +117,31 @@ function vnEngine(){
 
 
   this.initGameEnvirontment = function(){
-    this.stateManager.ScreenStatus =2;
-    this.graphicsManager.createDialogBox();
+    this.stateManager.ScreenStatus="game";
+    this.graphicsManager.createDialogBox(
+      function(){
+        vnEngine.checkScript();
+      }
+      );
   }
 
 
   //Nantinya fungsi ini akan mengatur cepat jalanya script + 
   //Memunculkan menu ketika klik kanan
   this.checkNextScript = function(ev){
-      if (ev.nativeEvent.which == 3 ||ev.nativeEvent.button == 2 ){
-        if(vnEngine.stateManager.ScreenStatus == 3){
+      if (ev.nativeEvent.which == 3 || ev.nativeEvent.button == 2 ){
+        if(vnEngine.stateManager.getScreenStatus() == "rightClickMenu"){
           vnEngine.stateManager.noCheckScriptFlag = vnEngine.stateManager.tempState;
           vnEngine.stage.removeChildAt(vnEngine.stage.getNumChildren()-1);
-
           if(vnEngine.stage.getChildAt(vnEngine.stage.getNumChildren()-1).clickable == false){
           vnEngine.stage.getChildAt(vnEngine.stage.getNumChildren()-1).clickable = true;
           }
-
-          vnEngine.stateManager.ScreenStatus=2;
+          vnEngine.stateManager.setScreenStatus("game");
         }
-        else{
+        else if(vnEngine.stateManager.getScreenStatus() == "game"){
         vnEngine.stateManager.tempState = vnEngine.stateManager.noCheckScriptFlag;
         vnEngine.stateManager.noCheckScriptFlag=true;
-        vnEngine.stateManager.ScreenStatus = 3;
+        vnEngine.stateManager.setScreenStatus("rightClickMenu");
         vnEngine.initRightClickMenu();
       }
       }
@@ -148,6 +153,8 @@ function vnEngine(){
   //Menjalankan Script selanjutnya
   //bertugas memilah & menjalankan perintah dari script
   this.checkScript = function(scriptArray){
+    console.log("checkScript");
+    console.log(this.stateManager.tempScriptQueue);
      if(scriptArray != undefined){
       this.stateManager.tempScriptQueue.splice(0,this.stateManager.tempScriptQueue.length);
         if(scriptArray.length == undefined){
@@ -176,7 +183,7 @@ function vnEngine(){
   //bertugas memilah & menjalankan perintah dari script
   this.parseScript = function(script,scriptCounter){
     if(scriptCounter-1<script.length){
-     console.log(scriptCounter-1 + " " + script[scriptCounter-1].type);
+     console.log(scriptCounter-1 + " " + script[scriptCounter-1].type );
       switch(script[scriptCounter-1].type){
       case 'initMenu' :
         vnEngine.initMenu();
@@ -242,12 +249,142 @@ function vnEngine(){
     }
   }
 }
+
+  this.initSaveLoadMenu = function(type,isInMainMenu){  
+    var container = new Container();
+    container.clickable =true;
+    var res = vnEngine.resourceManager.getResource("save").img;
+
+    var bitmap = new Bitmap(res);
+    bitmap.scaleY =  this.canvas.height / res.height;
+    bitmap.scaleX = this.canvas.width /  res.width;
+    bitmap.x =0;
+    bitmap.y = 0;
+
+
+    var bgLayer = new Graphics();
+    bgLayer.beginFill(Graphics.getRGB(0,0,0,0.5));
+
+    var bgLayerXY = vnEngine.canvas.height/20;
+    var bgLayerW = vnEngine.canvas.width- vnEngine.canvas.height/10;
+    var bgLayerH = vnEngine.canvas.height/10*9;
+    
+    bgLayer.drawRect(bgLayerXY,bgLayerXY, 
+    bgLayerW , bgLayerH);
+    var bgLayerShape = new Shape(bgLayer);
+
+    var saveLoadButtonContainer = new Container();
+    saveLoadButtonContainer.clickable =true;
+
+    var x = bgLayerXY +bgLayerW/10 ;
+    var y = bgLayerXY + bgLayerH/7;
+    var state = vnEngine.stateManager.getSaveStateInfo();
+
+
+    (function(self,type) {
+    self.saveLoadButtonClickListener= function(e){
+      if(type == "save"){
+        var state = vnEngine.stateManager.saveState(e.target.no);
+        if(state.SNA.length >20){
+          var speak = state.SCH +' :'+state.SNA.substring(0,20) + '...';
+        }
+        else{
+          var speak = state.SCH +' :'+state.SNA;
+        }
+        e.target.setText(state.TIME + ' '+speak);
+        alert("success");
+      }
+      else{
+        //Remove Container
+        if(vnEngine.stage.getChildAt(vnEngine.stage.getNumChildren()-2).clickable == false){
+          vnEngine.stage.getChildAt(vnEngine.stage.getNumChildren()-2).clickable = true;
+        }
+        vnEngine.stage.removeChild(container);
+
+
+        //load State
+
+        if(e.target.state){
+          if(e.target.isInMainMenu){
+            if(e.target.isInMainMenu.target.parent.parent.isContainer == "true"){
+              vnEngine.stage.removeChild(e.target.isInMainMenu.target.parent.parent);
+            }
+            else{
+             vnEngine.stage.removeChild(e.target.isInMainMenu.target.parent);
+            }
+            vnEngine.stateManager.loadState(e.target.state);
+          }
+          else{
+            vnEngine.stateManager.loadState(e.target.state);
+          }
+        }
+        else{
+          alert("slot Empty");
+        }
+      }
+    }
+  })(this,type);
+
+    //Create Button
+    for(var i =1 ; i < 9;i++){
+      if(state[i-1] == undefined){
+        var saveLoadDataButton = new Button("No Data",x,y,bgLayerW *8/10,30  );
+        saveLoadDataButton.no = i-1;
+        saveLoadDataButton.onClickListener = this.saveLoadButtonClickListener;
+        saveLoadDataButton.isInMainMenu = isInMainMenu;
+      }
+      else{
+        if(state[i-1].SNA.length >20){
+          var speak = state[i-1].SCH +' :'+state[i-1].SNA.substring(0,20) + '...';
+        }
+        else{
+          var speak = state[i-1].SCH +' :'+state[i-1].SNA;
+        }
+        var saveLoadDataButton = new Button(state[i-1].TIME + ' '+speak ,x,y,bgLayerW *8/10,30);
+        saveLoadDataButton.state = state[i-1];
+        saveLoadDataButton.no = i-1;
+        saveLoadDataButton.onClickListener = this.saveLoadButtonClickListener;
+        saveLoadDataButton.isInMainMenu = isInMainMenu;
+
+      }
+      y+=32;
+      saveLoadButtonContainer.addChild(saveLoadDataButton);
+    }
+
+  if(type == "save"){
+    var textMenu = new Text("SAVE" ,"17px arial","#FFF");
+    textMenu.y = bgLayerXY+ 30;
+    textMenu.x = vnEngine.canvas.width/2 - textMenu.getMeasuredWidth()/2;
+  }
+  else{
+    var textMenu = new Text("Load" ,"17px arial","#FFF");
+    textMenu.y = bgLayerXY+ 30;
+    textMenu.x = vnEngine.canvas.width/2 - textMenu.getMeasuredWidth()/2;
+  }
+
+  var backButton = new Button("back",bgLayerW-100,bgLayerH-30,100,30);
+  backButton.onClickListener=function(e){
+    if(vnEngine.stage.getChildAt(vnEngine.stage.getNumChildren()-2).clickable == false){
+      vnEngine.stage.getChildAt(vnEngine.stage.getNumChildren()-2).clickable = true;
+    }
+    vnEngine.stateManager.setScreenStatus(vnEngine.stateManager.getOldScreenStatus());
+    vnEngine.stage.removeChild(container);
+  }
+
+    container.addChild(bitmap);
+    container.addChild(bgLayerShape);
+    container.addChild(textMenu);
+    container.addChild(saveLoadButtonContainer);
+    container.addChild(backButton);
+    vnEngine.stage.addChild(container);
+  }
+
   this.initMenu = function(){
     //Clear all game resource
     vnEngine.stage.removeAllChildren();
     vnEngine.stateManager.clearAllState();
 
-    vnEngine.stateManager.ScreenStatus = 1;
+    vnEngine.stateManager.setScreenStatus("MAIN_MENU");
     var res = vnEngine.resourceManager.getResource("menu").img;
     var container = new Container();
     container.clickable = true;
@@ -275,6 +412,10 @@ function vnEngine(){
     }
 
     var loadButton = new Button("Load",0, y+40, this.canvas.width,30);
+    loadButton.onClickListener = function(e){
+      container.clickable = false;
+      vnEngine.initSaveLoadMenu("load",e);
+    }
     var settingsButton = new Button("Settings",0, y+80, this.canvas.width,30);
     settingsButton.onClickListener = function(){
       container.clickable = false;
@@ -340,6 +481,8 @@ function vnEngine(){
       if(vnEngine.stage.getChildAt(vnEngine.stage.getNumChildren()-2).clickable == false){
         vnEngine.stage.getChildAt(vnEngine.stage.getNumChildren()-2).clickable = true;
       }
+
+      vnEngine.stateManager.setScreenStatus(vnEngine.stateManager.getOldScreenStatus());
       vnEngine.stage.removeChild(container);
     }
 
@@ -379,17 +522,22 @@ function vnEngine(){
 
     var saveButton = new Button("Save",x,y+60,w,30);
     saveButton.onClickListener = function(){
-      vnEngine.stateManager.saveState();
+      container.clickable = false;
+      vnEngine.stateManager.setScreenStatus("menu");
+      vnEngine.initSaveLoadMenu("save");
     }
 
     var loadButton = new Button("Load",x,y+100,w,30);
     loadButton.onClickListener = function(){
-      vnEngine.stateManager.loadState();
+      container.clickable = false;
+      vnEngine.stateManager.setScreenStatus("menu");
+      vnEngine.initSaveLoadMenu("load");
     }
 
     var settingsButton = new Button("Settings",x,y+140,w,30);
     settingsButton.onClickListener = function(){
       container.clickable = false;
+      vnEngine.stateManager.setScreenStatus("menu");
       vnEngine.checkScript({type:'showSettingsMenu'});
     }
     var returnToTitleButton = new Button("Return to title",x,y+180,w,30);
@@ -447,6 +595,7 @@ function vnEngine(){
     var heightGenap = (this.canvas.height - (1/4 * this.canvas.height))*(2/4);
     var container = new Container();
     container.clickable = true;
+    container.isOption = true;
     var data;
 
     var onClickListenerFunction = function(e){
@@ -535,6 +684,11 @@ function Button(text,x,y,width,height){
   txt.y = y+20;
   container.addChild(txt);
 
+  container.setText = function(text){
+    txt.text = text;
+    txt.x = width/2 - txt.getMeasuredWidth()/2+x;
+  }
+
   container.onMouseOver = function(e){
     if(e.target.parent.clickable || e.target.clickable){
       var obj = e.target.children[0];
@@ -554,7 +708,7 @@ function Button(text,x,y,width,height){
     }
   }
   container.onClick =function(e){
-  if(e.target.parent.clickable || e.target.clickable){
+  if((e.target.parent.clickable || e.target.clickable)&&!(e.nativeEvent.which == 3 || e.nativeEvent.button == 2 )){
       container.onMouseOut(e);
       if(container.onClickListener!=undefined )
       {
@@ -576,10 +730,10 @@ function GraphicsManager(){
     bitmap.x =0;
     bitmap.y = 0;
     bitmap.isBackground = true;
-    if(vnEngine.stateManager.ScreenStatus ==2 || vnEngine.stateManager.ScreenStatus ==3){
+    if(vnEngine.stateManager.getScreenStatus() =="game" || vnEngine.stateManager.getScreenStatus() =="menu"){
       bitmap.onClick = vnEngine.checkNextScript;
     }
-
+    console.log(vnEngine.stage.getNumChildren());
     if(vnEngine.stage.getNumChildren() >0){
       if(vnEngine.stage.getChildAt(0).isBackground){
         vnEngine.stateManager.noCheckScriptFlag = true;
@@ -595,7 +749,7 @@ function GraphicsManager(){
         else{
           Tween.get(bitmap).to({alpha:0}).to({alpha:1},300)
           .call(function() {
-          vnEngine.stage.removeChildAt(0);vnEngine.stateManager.noCheckScriptFlag = false;callback();} );
+          vnEngine.stage.removeChildAt(0);callback();} );
         }
 
       }
@@ -606,7 +760,14 @@ function GraphicsManager(){
     }
     else{
       vnEngine.stage.addChild(bitmap);
-      Tween.get(bitmap).to({alpha:0}).to({alpha:1},300);
+      if(callback == undefined){
+        Tween.get(bitmap).to({alpha:0}).to({alpha:1},300);
+      }
+      else{
+         Tween.get(bitmap).to({alpha:0}).to({alpha:1},300)
+          .call(function() {
+          callback();} );
+      }
     }
   } 
 
@@ -635,7 +796,7 @@ function GraphicsManager(){
         alert("script Error");
       break;
   } 
-  //this.stateManager.displayCharacterList[position] = chara;
+  vnEngine.stateManager.displayCharacterList[position] = chara;
   bitmap.position = position;   
   vnEngine.stage.addChildAt(bitmap,1); 
   Tween.get(bitmap).to({alpha:0}).wait(100).to({alpha:1},300);
@@ -651,17 +812,17 @@ function GraphicsManager(){
         }
       }
     }
-      if (i+1 == vnEngine.stage.getNumChildren) {
+      if (i == vnEngine.stage.getNumChildren()) {
+        console.log("character not found");
       }
       else{
         Tween.get(chara).to({alpha:0},100).call(vnEngine.stage.removeChild,
           [chara],vnEngine.stage);
           vnEngine.stateManager.displayCharacterList[position] = undefined;
-
       }
   }
 
-  this.createDialogBox = function(){
+  this.createDialogBox = function(run){
     var textRect = new Graphics();
     textRect.beginFill(Graphics.getRGB(0,0,0,0.5));
     textRect.drawRect(0,vnEngine.canvas.height - (1/4 * vnEngine.canvas.height) , vnEngine.canvas.width , 1/4 * vnEngine.canvas.height);
@@ -669,7 +830,9 @@ function GraphicsManager(){
     var shape = new Shape(textRect);
     shape.onClick = vnEngine.checkNextScript;
     vnEngine.stage.addChild(shape);
-    vnEngine.checkScript();
+    if(run!=undefined){
+      run();
+    }
   }
 }
 
