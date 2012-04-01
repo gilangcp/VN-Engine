@@ -329,18 +329,20 @@ function vnEngine(){
     for(var i =1 ; i < 9;i++){
       if(state[i-1] == undefined){
         var saveLoadDataButton = new Button("No Data",x,y,bgLayerW *8/10,30  );
+        saveLoadDataButton.setTextAlign("left");
         saveLoadDataButton.no = i-1;
         saveLoadDataButton.onClickListener = this.saveLoadButtonClickListener;
         saveLoadDataButton.isInMainMenu = isInMainMenu;
       }
       else{
         if(state[i-1].SNA.length >20){
-          var speak = state[i-1].SCH +' :'+state[i-1].SNA.substring(0,20) + '...';
+          var speak = state[i-1].SCH +' : '+state[i-1].SNA.substring(0,20) + '...';
         }
         else{
-          var speak = state[i-1].SCH +' :'+state[i-1].SNA;
+          var speak = state[i-1].SCH +' : '+state[i-1].SNA;
         }
         var saveLoadDataButton = new Button(state[i-1].TIME + ' '+speak ,x,y,bgLayerW *8/10,30);
+        saveLoadDataButton.setTextAlign("left");
         saveLoadDataButton.state = state[i-1];
         saveLoadDataButton.no = i-1;
         saveLoadDataButton.onClickListener = this.saveLoadButtonClickListener;
@@ -663,6 +665,8 @@ function arrayIndexOf(array, obj,value) {
 
 
 function Button(text,x,y,width,height){
+  var self = this;
+  this.align = "center";
   var container = new Container();
   container.onClickListener = undefined;
   var optionRect = new Graphics();
@@ -686,7 +690,21 @@ function Button(text,x,y,width,height){
 
   container.setText = function(text){
     txt.text = text;
-    txt.x = width/2 - txt.getMeasuredWidth()/2+x;
+    self.setTextAlign(self.align);
+  }
+
+  container.setTextAlign=function(align){
+    switch(align){
+      case 'left':
+        txt.x = x+10;
+      break;
+      case 'center':
+        txt.x = width/2 - txt.getMeasuredWidth()/2+x;
+      break
+      case 'right':
+        txt.x = width - txt.getMeasuredWidth -10;
+      break;
+    }
   }
 
   container.onMouseOver = function(e){
