@@ -1,80 +1,3 @@
-var script = new Array;
- 
-  script.push({type:'playBGM',soundLabel: 'menuBGM'});
-  script.push({type:'changeBackground',imageLabel:'s1'});
-  script.push({type:'delay',ms:3000});
-  script.push({type:'changeBackground',imageLabel:'s2'});
-  script.push({type:'delay',ms:'3000'});
-  script.push({type:'initMenu'});
-
-  script.push({type:'addJumpLabel', jumpLabel:'startGame'});
-  script.push({type:'startGame'});
-  script.push({type:'addFlag',flagLabel :'F1',flagValue:'false'});
-  script.push({type:'addFlag',flagLabel :'F2',flagValue:'false'});
-  script.push({type:'addJumpLabel', jumpLabel:'A1'});
-  script.push({type:'if',
-              op:'==',
-              exp1 : {type:'getFlag',flagLabel:"F2"}, 
-              exp2:'true',
-              right : {type:'editFlag',flagLabel:"F1", flagValue:'true'},
-              wrong :undefined});
-  script.push({type:'changeBackground',imageLabel:'s1'});
-  script.push({type:'playBGM',soundLabel: 'normal'});
-
-  script.push({type:'speak' ,character :'Gilang', speak: 'kimochi  :)'});
-  script.push({type:'showCharacter',imageLabel :'charaRina1' , position: 'left'});
-  script.push({type:'pauseScript'});
-  script.push({type:'playBGM',soundLabel: 'normal'});
-  script.push({type:'showCharacter',imageLabel :'charaClara1', position: 'center'});
-  script.push({type:'pauseScript'});
-  script.push({type:'playBGM',soundLabel: 'normal'});
-  script.push({type:'showCharacter',imageLabel :'charaLily1',position:'right'});
-  script.push({type:'pauseScript'});
-
-  script.push({type:'changeBackground',imageLabel:'s2'});
-  script.push({type:'speak', character :'rina',speak : 'apaan pagi-pagi udah halo?'});
-  script.push({type:'changeBackground',imageLabel:'s1'});
-  script.push({type:'pauseScript'});
-  script.push({type:'hideCharacter',position :'right'});
-  script.push({type:'pauseScript'});
-  script.push({type:'hideCharacter',position :'left'});
-  script.push({type:'pauseScript'});
-  script.push({type:'changeBackground',imageLabel:'s2'});
-  script.push({type:'pauseScript'});
-  script.push({type:'speak',character : 'gilang' , speak : 'Eh? semuanya pada kemana?'});
-  script.push({type:'hideCharacter',position :'center'});
-
-  script.push({type:'if',
-            op:'==',
-            exp1 : {type:'getFlag',flagLabel:"F1"}, 
-            exp2:'true',
-            right : undefined,
-            wrong :[{type :'editFlag',flagLabel:'F2',flagValue:'true'},{type :'jumpTo',jumpLabel:'A1'}]});
-  script.push({type:'option' , optionList : [
-    {caption : 'Ulangi' , perform: {type : 'jumpTo' , jumpLabel:'A1'}},
-    {caption :'Selesai' , perform: undefined}
-  ]});
-  script.push({type:'playBGM',soundLabel: 'ending'});
-  script.push({type: 'speak', character:'Gilang',speak:'apa yang terjadi? gamenya selesai?'});
-
-
-var resourceList = new Array;
-  resourceList.push({type :'img',url  :'resource/image/1.jpg',imageLabel :'s1'});
-  resourceList.push({type :'img',url  :'resource/image/2.jpg',imageLabel :'s2'});
-  resourceList.push({type :'img',url  :'resource/image/chara/rina1.png',imageLabel :'charaRina1'});
-  resourceList.push({type :'img',url  :'resource/image/chara/clara1.png',imageLabel :'charaClara1'});
-  resourceList.push({type :'img',url  :'resource/image/chara/lily1.png',imageLabel :'charaLily1'});
-  resourceList.push({type :'snd',url  :'resource/sound/ending.mp3', soundLabel : 'ending'});
-  resourceList.push({type :'snd',url  : 'resource/sound/opening.mp3',soundLabel : 'menuBGM'});
-  resourceList.push({type :'snd',url  :'resource/sound/sad.mp3',soundLabel : 'sad'});
-  resourceList.push({type :'snd',url  : 'resource/sound/normal.mp3',soundLabel : 'normal'});
-  resourceList.push({type :'snd',url  : 'resource/sfx/click.wav',soundLabel : 'sfxClick'});
-  resourceList.push({type :'img',url  :'resource/image/3.jpg' , imageLabel:'menu'});
-  resourceList.push({type :'img',url  :'resource/image/4.jpg' , imageLabel:'settings'});
-  resourceList.push({type :'img',url  :'resource/image/4.jpg' , imageLabel:'save'});
-
-
-
 function vnEngine(){
   var self = this;
   
@@ -104,7 +27,8 @@ function vnEngine(){
 
     //create & configure easel js canvas  
     this.stage = new Stage(this.canvas);
-    this.stage.enableMouseOver()
+    this.stage.enableMouseOver();
+    Ticker.useRAF = true; 
     Ticker.setFPS(20);
     Ticker.addListener(this.stage,false);
 
@@ -515,27 +439,28 @@ function vnEngine(){
     background.drawRect(x,y,w,h);
     var bgShape = new Shape(background);
 
-    var saveButton = new Button("Save",x,y+60,w,30);
+    var offset = h/8;
+    var saveButton = new Button("Save",x,y+(h/4)-offset,w,30);
     saveButton.onClickListener = function(){
       container.clickable = false;
       vnEngine.stateManager.setScreenStatus("menu");
       vnEngine.initSaveLoadMenu("save");
     }
 
-    var loadButton = new Button("Load",x,y+100,w,30);
+    var loadButton = new Button("Load",x,y+(h/2)-offset,w,30);
     loadButton.onClickListener = function(){
       container.clickable = false;
       vnEngine.stateManager.setScreenStatus("menu");
       vnEngine.initSaveLoadMenu("load");
     }
 
-    var settingsButton = new Button("Settings",x,y+140,w,30);
+    var settingsButton = new Button("Settings",x,y+(h/4*3)-offset,w,30);
     settingsButton.onClickListener = function(){
       container.clickable = false;
       vnEngine.stateManager.setScreenStatus("menu");
       vnEngine.checkScript({type:'showSettingsMenu'});
     }
-    var returnToTitleButton = new Button("Return to title",x,y+180,w,30);
+    var returnToTitleButton = new Button("Return to title",x,y+h-offset,w,30);
     returnToTitleButton.onClickListener = function(){
       vnEngine.soundController.stopBGM();
       vnEngine.checkScript({type:'initMenu'});
@@ -629,20 +554,47 @@ function vnEngine(){
   }
 
   this.speak = function (character , speak){
+    self = this;
     if(this.stateManager.speakTextDisplayObject == undefined){
-      var txt = new Text(speak,"17px arial","#FFF");
+      var txt = new Text("","17px arial","#FFF");
       txt.x = 30;
       txt.y = this.canvas.height-this.canvas.height/8;
+      txt.lineWidth = this.canvas.width;
+      txt.textAlign ="left";
       this.stage.addChild(txt);
-      var chara = new Text(character,"17px arial","#FFF");
+
+      var chara = new Text("","17px arial","#FFF");
       chara.x = 30;
       chara.y = this.canvas.height-this.canvas.height/5;
       this.stage.addChild(chara);
       this.stateManager.speakTextDisplayObject = chara;
     }
+
+      vnEngine.stage.getChildAt(this.stage.getChildIndex(this.stateManager.speakTextDisplayObject)-1).text ="";
+      
+      setTimeout(function(){
+        self.startTextScrolling(character,speak);
+      },50);
+
+    this.startTextScrolling = function(character,speak){
+      vnEngine.stateManager.speakTextDisplayObject.text=character;
+      var tempText = vnEngine.stage.getChildAt(this.stage.getChildIndex(this.stateManager.speakTextDisplayObject)-1).text;
+
+    if(speak.length > 3 ){
+      var cutted = speak.substr(0,3);
+      speak = speak.substr(3,speak.length);
+      vnEngine.stage.getChildAt(this.stage.getChildIndex(this.stateManager.speakTextDisplayObject)-1).text =tempText+cutted;
+    }
     else{
-      this.stateManager.speakTextDisplayObject.text =character;
-      this.stage.getChildAt(this.stage.getChildIndex(this.stateManager.speakTextDisplayObject)-1).text = speak;
+      vnEngine.stage.getChildAt(this.stage.getChildIndex(this.stateManager.speakTextDisplayObject)-1).text = tempText+speak;
+      speak = "";  
+    }
+
+      if(speak.length >0){
+        setTimeout(function(){
+          self.startTextScrolling(character,speak);
+        },50);
+      }
     }
   }
 }

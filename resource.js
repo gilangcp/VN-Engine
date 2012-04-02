@@ -1,0 +1,14 @@
+var resourceList = new Array;
+  resourceList.push({type :'img',url  :'resource/image/1.jpg',imageLabel :'s1'});
+  resourceList.push({type :'img',url  :'resource/image/2.jpg',imageLabel :'s2'});
+  resourceList.push({type :'img',url  :'resource/image/chara/rina1.png',imageLabel :'charaRina1'});
+  resourceList.push({type :'img',url  :'resource/image/chara/clara1.png',imageLabel :'charaClara1'});
+  resourceList.push({type :'img',url  :'resource/image/chara/lily1.png',imageLabel :'charaLily1'});
+  resourceList.push({type :'snd',url  :'resource/sound/ending.mp3', soundLabel : 'ending'});
+  resourceList.push({type :'snd',url  : 'resource/sound/opening.mp3',soundLabel : 'menuBGM'});
+  resourceList.push({type :'snd',url  :'resource/sound/sad.mp3',soundLabel : 'sad'});
+  resourceList.push({type :'snd',url  : 'resource/sound/normal.mp3',soundLabel : 'normal'});
+  resourceList.push({type :'snd',url  : 'resource/sfx/click.wav',soundLabel : 'sfxClick'});
+  resourceList.push({type :'img',url  :'resource/image/3.jpg' , imageLabel:'menu'});
+  resourceList.push({type :'img',url  :'resource/image/4.jpg' , imageLabel:'settings'});
+  resourceList.push({type :'img',url  :'resource/image/4.jpg' , imageLabel:'save'});
