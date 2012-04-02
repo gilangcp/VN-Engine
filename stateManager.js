@@ -1,4 +1,5 @@
 function StateManager(){
+  self =this;
   this.speakTextDisplayObject = undefined;
 	this.ScreenStatus = 0;
 	this.noCheckScriptFlag =false;
@@ -104,17 +105,15 @@ function StateManager(){
   	state[no] = {
       NO   :no,
       TIME :time,
-  		SC   :this.scriptCounter,
-  		TSQ  :this.tempScriptQueue,
-  		TSC  :this.tempScriptCounter,
-  		JLL  :this.jumpLabelList,
-  		FL   :this.flagList,
-  		DFL  :this.defaultflagList,
-  		BGM	 :this.bgm,
-  		CHR	 :this.displayCharacterList,
-  		BGI  :this.backgroundImage,
-      SCH  :this.speakTextDisplayObject.text,
-      SNA  :vnEngine.stage.getChildAt(vnEngine.stage.getChildIndex(this.speakTextDisplayObject)-1).text
+  		SC   :self.scriptCounter,
+  		JLL  :self.jumpLabelList,
+  		FL   :self.flagList,
+  		DFL  :self.defaultflagList,
+  		BGM	 :self.bgm,
+  		CHR	 :self.displayCharacterList,
+  		BGI  :self.backgroundImage,
+      SCH  :self.speakTextDisplayObject.text,
+      SNA  :vnEngine.stage.getChildAt(vnEngine.stage.getChildIndex(self.speakTextDisplayObject)-1).text
   	};
   	localStorage.setItem("state",JSON.stringify(state));
     return state[no];
@@ -129,16 +128,29 @@ function StateManager(){
   }
 
   this.loadState = function(state){
-   console.log("Loading state");
     this.jumpLabelList = state.JLL;
     this.flagList = state.FL;
     this.defaultflagList = state.DFL;
 
     vnEngine.soundController.playBGM(state.BGM);
 
-    vnEngine.stateManager.ScreenStatus="game";
-
+    self.setScreenStatus("game");
     vnEngine.graphicsManager.changeBackground(state.BGI, function(){
+      if(self.getOldScreenStatus() == "MAIN_MENU"){
+          vnEngine.graphicsManager.createDialogBox();
+          self.speakTextDisplayObject = undefined;
+          vnEngine.speak(state.SCH,state.SNA);
+      }
+      else{
+        vnEngine.speak(state.SCH,state.SNA);
+        //Remove right click menu
+        vnEngine.stateManager.noCheckScriptFlag = vnEngine.stateManager.tempState;
+        vnEngine.stage.removeChildAt(vnEngine.stage.getNumChildren()-1);
+        if(vnEngine.stage.getChildAt(vnEngine.stage.getNumChildren()-1).clickable == false){
+          vnEngine.stage.getChildAt(vnEngine.stage.getNumChildren()-1).clickable = true;
+        }
+      }
+
       if(state.CHR.left!= undefined){
         vnEngine.graphicsManager.hideCharacter("left");
         vnEngine.graphicsManager.showCharacter(state.CHR.left,"left");
@@ -160,29 +172,19 @@ function StateManager(){
         vnEngine.graphicsManager.hideCharacter("center");
       }
 
-     vnEngine.stateManager.tempScriptQueue = state.TSQ;
-     if(vnEngine.stateManager.tempScriptCounter >0){
-        vnEngine.stateManager.tempScriptCounter = state.TSC;
-      }
-
-      vnEngine.stateManager.speakTextDisplayObject.text = state.SCH;
-      vnEngine.stage.getChildAt(vnEngine.stage.getChildIndex(vnEngine.stateManager.speakTextDisplayObject)-1).text = state.SNA;
       vnEngine.stateManager.scriptCounter = state.SC;
-               
-
-      //Remove right click menu
-      vnEngine.stateManager.noCheckScriptFlag = vnEngine.stateManager.tempState;
-      vnEngine.stage.removeChildAt(vnEngine.stage.getNumChildren()-1);
-      if(vnEngine.stage.getChildAt(vnEngine.stage.getNumChildren()-1).clickable == false){
-      vnEngine.stage.getChildAt(vnEngine.stage.getNumChildren()-1).clickable = true;
+      
+      if(vnEngine.stage.getChildAt(vnEngine.stage.getNumChildren()-1).isOption ==true){
+        vnEngine.stateManager.noCheckScriptFlag = false;
+        vnEngine.stage.removeChildAt(vnEngine.stage.getNumChildren()-1);
       }
-
 
       //Option
       if(script[vnEngine.stateManager.scriptCounter-1].type == "option"){
         vnEngine.stateManager.scriptCounter--;
         vnEngine.checkScript();
       }
+      console.log(vnEngine.stateManager.scriptCounter);
      console.log("state Loaded"); 
     });
   }

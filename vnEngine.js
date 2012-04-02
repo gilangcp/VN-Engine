@@ -117,17 +117,18 @@ function vnEngine(){
 
 
   this.initGameEnvirontment = function(){
-    this.stateManager.ScreenStatus ="game";
-    this.graphicsManager.createDialogBox();
+    this.stateManager.ScreenStatus="game";
+    this.graphicsManager.createDialogBox(
+      function(){
+        vnEngine.checkScript();
+      }
+      );
   }
 
 
   //Nantinya fungsi ini akan mengatur cepat jalanya script + 
   //Memunculkan menu ketika klik kanan
   this.checkNextScript = function(ev){
-    console.log("masuk sini");
-    console.log(ev);
-    console.log(vnEngine.stateManager.getScreenStatus());
       if (ev.nativeEvent.which == 3 || ev.nativeEvent.button == 2 ){
         if(vnEngine.stateManager.getScreenStatus() == "rightClickMenu"){
           vnEngine.stateManager.noCheckScriptFlag = vnEngine.stateManager.tempState;
@@ -152,6 +153,8 @@ function vnEngine(){
   //Menjalankan Script selanjutnya
   //bertugas memilah & menjalankan perintah dari script
   this.checkScript = function(scriptArray){
+    console.log("checkScript");
+    console.log(this.stateManager.tempScriptQueue);
      if(scriptArray != undefined){
       this.stateManager.tempScriptQueue.splice(0,this.stateManager.tempScriptQueue.length);
         if(scriptArray.length == undefined){
@@ -180,7 +183,7 @@ function vnEngine(){
   //bertugas memilah & menjalankan perintah dari script
   this.parseScript = function(script,scriptCounter){
     if(scriptCounter-1<script.length){
-     console.log(scriptCounter-1 + " " + script[scriptCounter-1].type);
+     console.log(scriptCounter-1 + " " + script[scriptCounter-1].type );
       switch(script[scriptCounter-1].type){
       case 'initMenu' :
         vnEngine.initMenu();
@@ -247,7 +250,7 @@ function vnEngine(){
   }
 }
 
-  this.initSaveLoadMenu = function(type){  
+  this.initSaveLoadMenu = function(type,isInMainMenu){  
     var container = new Container();
     container.clickable =true;
     var res = vnEngine.resourceManager.getResource("save").img;
@@ -298,9 +301,22 @@ function vnEngine(){
         }
         vnEngine.stage.removeChild(container);
 
+
         //load State
+
         if(e.target.state){
-        vnEngine.stateManager.loadState(e.target.state);
+          if(e.target.isInMainMenu){
+            if(e.target.isInMainMenu.target.parent.parent.isContainer == "true"){
+              vnEngine.stage.removeChild(e.target.isInMainMenu.target.parent.parent);
+            }
+            else{
+             vnEngine.stage.removeChild(e.target.isInMainMenu.target.parent);
+            }
+            vnEngine.stateManager.loadState(e.target.state);
+          }
+          else{
+            vnEngine.stateManager.loadState(e.target.state);
+          }
         }
         else{
           alert("slot Empty");
@@ -313,20 +329,25 @@ function vnEngine(){
     for(var i =1 ; i < 9;i++){
       if(state[i-1] == undefined){
         var saveLoadDataButton = new Button("No Data",x,y,bgLayerW *8/10,30  );
+        saveLoadDataButton.setTextAlign("left");
         saveLoadDataButton.no = i-1;
         saveLoadDataButton.onClickListener = this.saveLoadButtonClickListener;
+        saveLoadDataButton.isInMainMenu = isInMainMenu;
       }
       else{
         if(state[i-1].SNA.length >20){
-          var speak = state[i-1].SCH +' :'+state[i-1].SNA.substring(0,20) + '...';
+          var speak = state[i-1].SCH +' : '+state[i-1].SNA.substring(0,20) + '...';
         }
         else{
-          var speak = state[i-1].SCH +' :'+state[i-1].SNA;
+          var speak = state[i-1].SCH +' : '+state[i-1].SNA;
         }
         var saveLoadDataButton = new Button(state[i-1].TIME + ' '+speak ,x,y,bgLayerW *8/10,30);
+        saveLoadDataButton.setTextAlign("left");
         saveLoadDataButton.state = state[i-1];
         saveLoadDataButton.no = i-1;
         saveLoadDataButton.onClickListener = this.saveLoadButtonClickListener;
+        saveLoadDataButton.isInMainMenu = isInMainMenu;
+
       }
       y+=32;
       saveLoadButtonContainer.addChild(saveLoadDataButton);
@@ -365,7 +386,7 @@ function vnEngine(){
     vnEngine.stage.removeAllChildren();
     vnEngine.stateManager.clearAllState();
 
-    vnEngine.stateManager.setScreenStatus("menu");
+    vnEngine.stateManager.setScreenStatus("MAIN_MENU");
     var res = vnEngine.resourceManager.getResource("menu").img;
     var container = new Container();
     container.clickable = true;
@@ -393,9 +414,9 @@ function vnEngine(){
     }
 
     var loadButton = new Button("Load",0, y+40, this.canvas.width,30);
-    loadButton.onClickListener = function(){
+    loadButton.onClickListener = function(e){
       container.clickable = false;
-      vnEngine.initSaveLoadMenu();
+      vnEngine.initSaveLoadMenu("load",e);
     }
     var settingsButton = new Button("Settings",0, y+80, this.canvas.width,30);
     settingsButton.onClickListener = function(){
@@ -576,6 +597,7 @@ function vnEngine(){
     var heightGenap = (this.canvas.height - (1/4 * this.canvas.height))*(2/4);
     var container = new Container();
     container.clickable = true;
+    container.isOption = true;
     var data;
 
     var onClickListenerFunction = function(e){
@@ -643,6 +665,8 @@ function arrayIndexOf(array, obj,value) {
 
 
 function Button(text,x,y,width,height){
+  var self = this;
+  this.align = "center";
   var container = new Container();
   container.onClickListener = undefined;
   var optionRect = new Graphics();
@@ -666,7 +690,21 @@ function Button(text,x,y,width,height){
 
   container.setText = function(text){
     txt.text = text;
-    txt.x = width/2 - txt.getMeasuredWidth()/2+x;
+    self.setTextAlign(self.align);
+  }
+
+  container.setTextAlign=function(align){
+    switch(align){
+      case 'left':
+        txt.x = x+10;
+      break;
+      case 'center':
+        txt.x = width/2 - txt.getMeasuredWidth()/2+x;
+      break
+      case 'right':
+        txt.x = width - txt.getMeasuredWidth -10;
+      break;
+    }
   }
 
   container.onMouseOver = function(e){
@@ -688,7 +726,7 @@ function Button(text,x,y,width,height){
     }
   }
   container.onClick =function(e){
-  if(e.target.parent.clickable || e.target.clickable){
+  if((e.target.parent.clickable || e.target.clickable)&&!(e.nativeEvent.which == 3 || e.nativeEvent.button == 2 )){
       container.onMouseOut(e);
       if(container.onClickListener!=undefined )
       {
@@ -710,10 +748,10 @@ function GraphicsManager(){
     bitmap.x =0;
     bitmap.y = 0;
     bitmap.isBackground = true;
-    if(vnEngine.stateManager.getScreenStatus() =="game" || vnEngine.stateManager.getScreenStatus() =="rightClickMenu"){
+    if(vnEngine.stateManager.getScreenStatus() =="game" || vnEngine.stateManager.getScreenStatus() =="menu"){
       bitmap.onClick = vnEngine.checkNextScript;
     }
-
+    console.log(vnEngine.stage.getNumChildren());
     if(vnEngine.stage.getNumChildren() >0){
       if(vnEngine.stage.getChildAt(0).isBackground){
         vnEngine.stateManager.noCheckScriptFlag = true;
@@ -740,7 +778,14 @@ function GraphicsManager(){
     }
     else{
       vnEngine.stage.addChild(bitmap);
-      Tween.get(bitmap).to({alpha:0}).to({alpha:1},300);
+      if(callback == undefined){
+        Tween.get(bitmap).to({alpha:0}).to({alpha:1},300);
+      }
+      else{
+         Tween.get(bitmap).to({alpha:0}).to({alpha:1},300)
+          .call(function() {
+          callback();} );
+      }
     }
   } 
 
@@ -795,7 +840,7 @@ function GraphicsManager(){
       }
   }
 
-  this.createDialogBox = function(){
+  this.createDialogBox = function(run){
     var textRect = new Graphics();
     textRect.beginFill(Graphics.getRGB(0,0,0,0.5));
     textRect.drawRect(0,vnEngine.canvas.height - (1/4 * vnEngine.canvas.height) , vnEngine.canvas.width , 1/4 * vnEngine.canvas.height);
@@ -803,7 +848,9 @@ function GraphicsManager(){
     var shape = new Shape(textRect);
     shape.onClick = vnEngine.checkNextScript;
     vnEngine.stage.addChild(shape);
-    vnEngine.checkScript();
+    if(run!=undefined){
+      run();
+    }
   }
 }
 
