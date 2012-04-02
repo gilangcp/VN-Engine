@@ -114,8 +114,6 @@ function vnEngine(){
     this.resourceManager.init();
   }
 
-
-
   this.initGameEnvirontment = function(){
     this.stateManager.ScreenStatus="game";
     this.graphicsManager.createDialogBox(
@@ -124,7 +122,6 @@ function vnEngine(){
       }
       );
   }
-
 
   //Nantinya fungsi ini akan mengatur cepat jalanya script + 
   //Memunculkan menu ketika klik kanan
@@ -153,8 +150,6 @@ function vnEngine(){
   //Menjalankan Script selanjutnya
   //bertugas memilah & menjalankan perintah dari script
   this.checkScript = function(scriptArray){
-    console.log("checkScript");
-    console.log(this.stateManager.tempScriptQueue);
      if(scriptArray != undefined){
       this.stateManager.tempScriptQueue.splice(0,this.stateManager.tempScriptQueue.length);
         if(scriptArray.length == undefined){
@@ -228,9 +223,7 @@ function vnEngine(){
         this.stateManager.editFlag(script[scriptCounter-1].flagLabel ,script[scriptCounter-1].flagValue);
       break;
       case 'playBGM':
-        if(this.soundController.bgm != undefined){
-          this.stateManager.bgm = this.soundController.bgm;
-        }
+        this.stateManager.bgm = script[scriptCounter-1].soundLabel;
         this.soundController.playBGM(script[scriptCounter-1].soundLabel);
         vnEngine.checkScript();
       break;
@@ -690,10 +683,11 @@ function Button(text,x,y,width,height){
 
   container.setText = function(text){
     txt.text = text;
-    self.setTextAlign(self.align);
+    container.setTextAlign(self.align);
   }
 
   container.setTextAlign=function(align){
+    self.align = align;
     switch(align){
       case 'left':
         txt.x = x+10;
@@ -751,7 +745,6 @@ function GraphicsManager(){
     if(vnEngine.stateManager.getScreenStatus() =="game" || vnEngine.stateManager.getScreenStatus() =="menu"){
       bitmap.onClick = vnEngine.checkNextScript;
     }
-    console.log(vnEngine.stage.getNumChildren());
     if(vnEngine.stage.getNumChildren() >0){
       if(vnEngine.stage.getChildAt(0).isBackground){
         vnEngine.stateManager.noCheckScriptFlag = true;

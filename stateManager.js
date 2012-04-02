@@ -88,6 +88,8 @@ function StateManager(){
 
   this.saveState = function(no){
   var state = JSON.parse(localStorage.getItem("state"));
+
+  console.log(self.bgm);
   if(state == undefined){
     state = new Array;
   }
@@ -184,7 +186,6 @@ function StateManager(){
         vnEngine.stateManager.scriptCounter--;
         vnEngine.checkScript();
       }
-      console.log(vnEngine.stateManager.scriptCounter);
      console.log("state Loaded"); 
     });
   }
