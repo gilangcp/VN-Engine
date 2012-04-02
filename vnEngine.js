@@ -169,6 +169,9 @@ function vnEngine(){
       case 'showSettingsMenu' :
         this.initSettingsMenu();
       break;
+      case 'playVideo':
+        this.playVideo(script[scriptCounter-1].videoLabel);
+      break;
       default:
        alert("script error");
        break;
@@ -611,6 +614,22 @@ function vnEngine(){
          vnEngine.stage.getChildAt(this.stage.getChildIndex(this.stateManager.speakTextDisplayObject)-1).text =tempText+speak;
         }
       }
+    }
+
+    this.playVideo = function(label){
+      var video = vnEngine.resourceManager.getResource(label);
+      video.vid.height = vnEngine.canvas.height;
+      video.vid.width = vnEngine.canvas.width;
+      console.log(video.vid);
+
+      var bitmap = new Bitmap(video.vid);
+      vnEngine.stage.addChild(bitmap);
+      video.vid.onEnded = function(){
+        console.log("nyaaa");
+        vnEngine.stage.removeChild(bitmap);
+        vnEngine.checkScript();
+      }
+      video.vid.play();
     }
 }
 

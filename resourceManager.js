@@ -2,27 +2,34 @@ function ResourceManager(stage) {
 	var self = this;
 	this.loader;
 	this.stage = stage;
-  	this.resource =new Array;
+  this.resource =new Array;
 
 	this.init = function(){
-	//setup resource loader
+	 //setup resource loader
     this.loader = new PxLoader();
     this.resource =new Array;
     this.loader.addProgressListener(this.resProgressListener);
     this.loader.addCompletionListener(this.resCompleteListener);
-	this.loadResource();
+	 this.loadResource();
 	}
 
 	this.loadResource = function(){
     for(var i=0; i < resourceList.length; i++) {
-      if(resourceList[i].type == 'img'){
-      var pxImage = new PxLoaderImage(resourceList[i].url); 
-      pxImage.label = resourceList[i].imageLabel;
-      this.loader.add(pxImage);
-      }
-      else if(resourceList[i].type == 'snd'){
+      switch (resourceList[i].type){
+      case 'img':
+        var pxImage = new PxLoaderImage(resourceList[i].url); 
+        pxImage.label = resourceList[i].imageLabel;
+        this.loader.add(pxImage);
+      break;
+      case 'snd':
         var pxSound = new PxLoaderSound(resourceList[i].soundLabel,resourceList[i].url);
-       this.loader.add(pxSound);
+        this.loader.add(pxSound);
+      break;
+      case 'vid':
+        var pxVideo = new PxLoaderVideo(resourceList[i].url);
+        pxVideo.label = resourceList[i].videoLabel;
+        this.loader.add(pxVideo);
+      break;
       }
     } 
     this.loader.start();

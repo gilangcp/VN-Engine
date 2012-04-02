@@ -3,10 +3,9 @@ var script = new Array;
   script.push({type:'playBGM',soundLabel: 'menuBGM'});
   script.push({type:'changeBackground',imageLabel:'s1'});
   script.push({type:'delay',ms:3000});
-  script.push({type:'changeBackground',imageLabel:'s2'});
-  script.push({type:'delay',ms:'3000'});
-  script.push({type:'initMenu'});
+  script.push({type:'playVideo',videoLabel:'wongIT'});
 
+  script.push({type:'initMenu'});
   script.push({type:'addJumpLabel', jumpLabel:'startGame'});
   script.push({type:'startGame'});
   script.push({type:'addFlag',flagLabel :'F1',flagValue:'false'});
