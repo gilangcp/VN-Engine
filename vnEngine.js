@@ -41,14 +41,14 @@ function vnEngine(){
   this.initGameEnvirontment = function(){
     this.stateManager.ScreenStatus="game";
     this.graphicsManager.createDialogBox(
-      function(){
-        vnEngine.checkScript();
-      }
-      );
+    function(){
+      vnEngine.checkScript();
+    });
   }
 
-  //Nantinya fungsi ini akan mengatur cepat jalanya script + 
-  //Memunculkan menu ketika klik kanan
+  //Check if right mouse clicked 
+  //Check if speak text still scrolling
+  //Check noClick Flag
   this.checkNextScript = function(ev){
       if (ev.nativeEvent.which == 3 || ev.nativeEvent.button == 2 ){
         if(vnEngine.stateManager.getScreenStatus() == "rightClickMenu"){
@@ -60,19 +60,29 @@ function vnEngine(){
           vnEngine.stateManager.setScreenStatus("game");
         }
         else if(vnEngine.stateManager.getScreenStatus() == "game"){
-        vnEngine.stateManager.tempState = vnEngine.stateManager.noCheckScriptFlag;
-        vnEngine.stateManager.noCheckScriptFlag=true;
-        vnEngine.stateManager.setScreenStatus("rightClickMenu");
-        vnEngine.initRightClickMenu();
-      }
+          vnEngine.stateManager.tempState = vnEngine.stateManager.noCheckScriptFlag;
+          vnEngine.stateManager.noCheckScriptFlag=true;
+          vnEngine.stateManager.setScreenStatus("rightClickMenu");
+          vnEngine.initRightClickMenu();
+       }
       }
       else if (vnEngine.stateManager.noCheckScriptFlag == false){
-        vnEngine.checkScript();
+        if(vnEngine.stateManager.speakTextDisplayObject){
+          if(vnEngine.stage.getChildAt(vnEngine.stage.getChildIndex(vnEngine.stateManager.speakTextDisplayObject)-1).canScroll){
+            vnEngine.stage.getChildAt(vnEngine.stage.getChildIndex(vnEngine.stateManager.speakTextDisplayObject)-1).canScroll =false;
+          }
+          else{
+            vnEngine.checkScript();
+          }
+        }
+        else{
+          vnEngine.checkScript();
+        }
       }
     }
 
-  //Menjalankan Script selanjutnya
-  //bertugas memilah & menjalankan perintah dari script
+  //Run next script
+  //run temporary script if defined
   this.checkScript = function(scriptArray){
      if(scriptArray != undefined){
       this.stateManager.tempScriptQueue.splice(0,this.stateManager.tempScriptQueue.length);
@@ -98,11 +108,10 @@ function vnEngine(){
   }
 
 
-  //Menjalankan Script selanjutnya
-  //bertugas memilah & menjalankan perintah dari script
+  //Parse Script , Run the specified function
   this.parseScript = function(script,scriptCounter){
     if(scriptCounter-1<script.length){
-     console.log(scriptCounter-1 + " " + script[scriptCounter-1].type );
+     //console.log(scriptCounter-1 + " " + script[scriptCounter-1].type );
       switch(script[scriptCounter-1].type){
       case 'initMenu' :
         vnEngine.initMenu();
@@ -571,7 +580,7 @@ function vnEngine(){
     }
 
       vnEngine.stage.getChildAt(this.stage.getChildIndex(this.stateManager.speakTextDisplayObject)-1).text ="";
-      
+      vnEngine.stage.getChildAt(this.stage.getChildIndex(this.stateManager.speakTextDisplayObject)-1).canScroll = true;
       setTimeout(function(){
         self.startTextScrolling(character,speak);
       },50);
@@ -580,23 +589,29 @@ function vnEngine(){
       vnEngine.stateManager.speakTextDisplayObject.text=character;
       var tempText = vnEngine.stage.getChildAt(this.stage.getChildIndex(this.stateManager.speakTextDisplayObject)-1).text;
 
-    if(speak.length > 3 ){
-      var cutted = speak.substr(0,3);
-      speak = speak.substr(3,speak.length);
-      vnEngine.stage.getChildAt(this.stage.getChildIndex(this.stateManager.speakTextDisplayObject)-1).text =tempText+cutted;
-    }
-    else{
-      vnEngine.stage.getChildAt(this.stage.getChildIndex(this.stateManager.speakTextDisplayObject)-1).text = tempText+speak;
-      speak = "";  
-    }
-
-      if(speak.length >0){
-        setTimeout(function(){
-          self.startTextScrolling(character,speak);
-        },50);
+      if(vnEngine.stage.getChildAt(this.stage.getChildIndex(this.stateManager.speakTextDisplayObject)-1).canScroll){
+        if(speak.length > 3 ){
+          var cutted = speak.substr(0,3);
+          speak = speak.substr(3,speak.length);
+          vnEngine.stage.getChildAt(this.stage.getChildIndex(this.stateManager.speakTextDisplayObject)-1).text =tempText+cutted;
+        }
+        else{
+          vnEngine.stage.getChildAt(this.stage.getChildIndex(this.stateManager.speakTextDisplayObject)-1).text = tempText+speak;
+          speak = ""; 
+          vnEngine.stage.getChildAt(this.stage.getChildIndex(this.stateManager.speakTextDisplayObject)-1).canScroll = false; 
+        }
+          if(speak.length >0){
+            setTimeout(function(){
+              self.startTextScrolling(character,speak);
+            },50);
+          }
+        }
+        else{
+         vnEngine.stateManager.speakTextDisplayObject.text=character;
+         vnEngine.stage.getChildAt(this.stage.getChildIndex(this.stateManager.speakTextDisplayObject)-1).text =tempText+speak;
+        }
       }
     }
-  }
 }
 
 function arrayIndexOf(array, obj,value) {
@@ -859,9 +874,3 @@ function Slider(x,y,width,height){
   container.addChild(slideShape);
   return container;
 }
-
-
-
-
-
-
