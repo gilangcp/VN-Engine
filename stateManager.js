@@ -86,7 +86,6 @@ function StateManager(){
   }
 
   this.saveState = function(no){
-  var no=5;
   var state = JSON.parse(localStorage.getItem("state"));
   if(state == undefined){
     state = new Array;
@@ -118,11 +117,15 @@ function StateManager(){
       SNA  :vnEngine.stage.getChildAt(vnEngine.stage.getChildIndex(this.speakTextDisplayObject)-1).text
   	};
   	localStorage.setItem("state",JSON.stringify(state));
+    return state[no];
   	console.log("state Saved");
   }
 
   this.getSaveStateInfo = function(){
+    var data =JSON.parse(localStorage.getItem("state"));
+      if(data!=null)
         return JSON.parse(localStorage.getItem("state"));
+      else return new Array;
   }
 
   this.loadState = function(state){
@@ -132,6 +135,8 @@ function StateManager(){
     this.defaultflagList = state.DFL;
 
     vnEngine.soundController.playBGM(state.BGM);
+
+    vnEngine.stateManager.ScreenStatus="game";
 
     vnEngine.graphicsManager.changeBackground(state.BGI, function(){
       if(state.CHR.left!= undefined){
@@ -171,7 +176,7 @@ function StateManager(){
       if(vnEngine.stage.getChildAt(vnEngine.stage.getNumChildren()-1).clickable == false){
       vnEngine.stage.getChildAt(vnEngine.stage.getNumChildren()-1).clickable = true;
       }
-      vnEngine.stateManager.ScreenStatus=2;
+
 
       //Option
       if(script[vnEngine.stateManager.scriptCounter-1].type == "option"){

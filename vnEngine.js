@@ -281,7 +281,15 @@ function vnEngine(){
     (function(self,type) {
     self.saveLoadButtonClickListener= function(e){
       if(type == "save"){
-        //stub for save game
+        var state = vnEngine.stateManager.saveState(e.target.no);
+        if(state.SNA.length >20){
+          var speak = state.SCH +' :'+state.SNA.substring(0,20) + '...';
+        }
+        else{
+          var speak = state.SCH +' :'+state.SNA;
+        }
+        e.target.setText(state.TIME + ' '+speak);
+        alert("success");
       }
       else{
         //Remove Container
@@ -291,14 +299,21 @@ function vnEngine(){
         vnEngine.stage.removeChild(container);
 
         //load State
+        if(e.target.state){
         vnEngine.stateManager.loadState(e.target.state);
+        }
+        else{
+          alert("slot Empty");
+        }
       }
     }
   })(this,type);
 
+    //Create Button
     for(var i =1 ; i < 9;i++){
       if(state[i-1] == undefined){
         var saveLoadDataButton = new Button("No Data",x,y,bgLayerW *8/10,30  );
+        saveLoadDataButton.no = i-1;
         saveLoadDataButton.onClickListener = this.saveLoadButtonClickListener;
       }
       else{
@@ -310,6 +325,7 @@ function vnEngine(){
         }
         var saveLoadDataButton = new Button(state[i-1].TIME + ' '+speak ,x,y,bgLayerW *8/10,30);
         saveLoadDataButton.state = state[i-1];
+        saveLoadDataButton.no = i-1;
         saveLoadDataButton.onClickListener = this.saveLoadButtonClickListener;
       }
       y+=32;
@@ -647,6 +663,11 @@ function Button(text,x,y,width,height){
   txt.x = width/2 - txt.getMeasuredWidth()/2+x;
   txt.y = y+20;
   container.addChild(txt);
+
+  container.setText = function(text){
+    txt.text = text;
+    txt.x = width/2 - txt.getMeasuredWidth()/2+x;
+  }
 
   container.onMouseOver = function(e){
     if(e.target.parent.clickable || e.target.clickable){
