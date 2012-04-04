@@ -172,12 +172,31 @@ function vnEngine(){
       case 'playVideo':
         this.playVideo(script[scriptCounter-1].videoLabel);
       break;
+      case 'hideGameDialog' :
+        this.hideGameDialog();
+      break;
+      case 'showGameDialog' :
+        this.showGameDialog();
+      break;
       default:
        alert("script error");
        break;
     }
   }
 }
+
+  this.showGameDialog = function(){
+    vnEngine.stateManager.dialogBox.visible = true;
+    vnEngine.stateManager.speakTextDisplayObject.visible = true;
+    vnEngine.stage.getChildAt(this.stage.getChildIndex(this.stateManager.speakTextDisplayObject)-1).visible = true;
+
+  }
+
+  this.hideGameDialog = function(){
+    vnEngine.stateManager.dialogBox.visible = false;
+    vnEngine.stateManager.speakTextDisplayObject.visible = false;
+    vnEngine.stage.getChildAt(this.stage.getChildIndex(this.stateManager.speakTextDisplayObject)-1).visible = false;
+  }
 
   this.initSaveLoadMenu = function(type,isInMainMenu){  
     var container = new Container();
@@ -339,7 +358,7 @@ function vnEngine(){
        vnEngine.stage.removeChild(e.target.parent);
       }
         vnEngine.stateManager.noCheckScriptFlag = false;
-        vnEngine.checkScript({type:'jumpTo', jumpLabel:'startGame'});
+        vnEngine.checkScript([{type:'jumpTo', jumpLabel:'startGame'},{type:'startGame'}]);
     }
 
     var loadButton = new Button("Load",0, y+40, this.canvas.width,30);
@@ -716,12 +735,30 @@ function Button(text,x,y,width,height){
 
 function GraphicsManager(){
   this.changeBackground = function(imageLabel,callback){
-    vnEngine.stateManager.backgroundImage = imageLabel; 
-    vnEngine.stateManager.backgroundImage = imageLabel; 
-    var res  = vnEngine.resourceManager.getResource(imageLabel).img;
-    var bitmap = new Bitmap(res);
-    bitmap.scaleY =  vnEngine.canvas.height / res.height;
-    bitmap.scaleX = vnEngine.canvas.width /  res.width;
+    var res;
+    if(imageLabel.color == undefined){
+      vnEngine.stateManager.backgroundImage = imageLabel; 
+      vnEngine.stateManager.backgroundImage = imageLabel; 
+      res  = vnEngine.resourceManager.getResource(imageLabel);
+      if(res == false){
+        alert("script error \nChangeBackground : \nimageLabel : "+imageLabel+" not found \nscript line : "+vnEngine.scriptCounter);
+      }
+    }
+    else res = false;
+
+    if(res){
+      res = res.img;
+      var bitmap = new Bitmap(res);
+      bitmap.scaleY =  vnEngine.canvas.height / res.height;
+      bitmap.scaleX = vnEngine.canvas.width /  res.width;
+    }
+    else{
+      var g = new Graphics();
+      g.beginFill(imageLabel.color);
+      g.drawRect(0,0,vnEngine.canvas.width,vnEngine.canvas.height);
+      var bitmap = new Shape(g);
+    }
+
     bitmap.x =0;
     bitmap.y = 0;
     bitmap.isBackground = true;
@@ -824,6 +861,8 @@ function GraphicsManager(){
     var shape = new Shape(textRect);
     shape.onClick = vnEngine.checkNextScript;
     vnEngine.stage.addChild(shape);
+    vnEngine.stateManager.dialogBox = shape;
+
     if(run!=undefined){
       run();
     }

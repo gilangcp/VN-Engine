@@ -8,6 +8,7 @@ function StateManager(){
   this.scriptCounter = 0;
   this.tempScriptQueue = new Array;
   this.tempScriptCounter =0;
+  this.dialogBox = undefined;
 
   this.displayCharacterList = {left: undefined , right: undefined , center: undefined};
   this.backgroundImage = undefined;
@@ -18,6 +19,7 @@ function StateManager(){
 	this.defaultflagList = new Array;
 
 	this.clearAllState = function(){
+    this.dialogBox = undefined;
     this.currentImage = undefined;
     this.tempScreenStatus = undefined;
 		this.speakTextDisplayObject = undefined;
@@ -89,7 +91,6 @@ function StateManager(){
   this.saveState = function(no){
   var state = JSON.parse(localStorage.getItem("state"));
 
-  console.log(self.bgm);
   if(state == undefined){
     state = new Array;
   }

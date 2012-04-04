@@ -10,7 +10,7 @@ function ResourceManager(stage) {
     this.resource =new Array;
     this.loader.addProgressListener(this.resProgressListener);
     this.loader.addCompletionListener(this.resCompleteListener);
-	 this.loadResource();
+	   this.loadResource();
 	}
 
 	this.loadResource = function(){
@@ -53,11 +53,11 @@ function ResourceManager(stage) {
   }
 
   this.getResource = function(label) {
-    for (var i = 0; i < self.resource.length; i++) {
+  for (var i = 0; i < self.resource.length; i++) {
       if (self.resource[i].label == label) {
           return self.resource[i];
       }
   }
-  return -1;
+  return false;
   }
 }
