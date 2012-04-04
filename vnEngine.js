@@ -618,17 +618,14 @@ function vnEngine(){
 
     this.playVideo = function(label){
       var video = vnEngine.resourceManager.getResource(label);
-      video.vid.height = vnEngine.canvas.height;
-      video.vid.width = vnEngine.canvas.width;
-      console.log(video.vid);
-
       var bitmap = new Bitmap(video.vid);
+      bitmap.scaleX =  vnEngine.canvas.width / video.vid.videoWidth;
+      bitmap.scaleY = vnEngine.canvas.height /video.vid.videoHeight;
       vnEngine.stage.addChild(bitmap);
-      video.vid.onEnded = function(){
-        console.log("nyaaa");
+      video.vid.addEventListener('ended',function(){
         vnEngine.stage.removeChild(bitmap);
         vnEngine.checkScript();
-      }
+        });
       video.vid.play();
     }
 }
