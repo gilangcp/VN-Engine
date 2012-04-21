@@ -618,8 +618,8 @@ function vnEngine(){
 
     this.playVideo = function(label){
       var video = vnEngine.resourceManager.getResource(label);
-      video.vid.height = vnEngine.canvas.height;
-      video.vid.width = vnEngine.canvas.width;
+      video.vid.setAttribute('height',vnEngine.canvas.height);
+      video.vid.setAttribute('width',vnEngine.canvas.width);
       console.log(video.vid);
 
       var bitmap = new Bitmap(video.vid);
@@ -719,7 +719,6 @@ function Button(text,x,y,width,height){
 
 function GraphicsManager(){
   this.changeBackground = function(imageLabel,callback){
-    vnEngine.stateManager.backgroundImage = imageLabel; 
     vnEngine.stateManager.backgroundImage = imageLabel; 
     var res  = vnEngine.resourceManager.getResource(imageLabel).img;
     var bitmap = new Bitmap(res);
