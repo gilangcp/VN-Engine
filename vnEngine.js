@@ -1,3 +1,10 @@
+/*
+*vnEngine.js
+*Main file that implements Visual Novel typical function
+*
+* 2012 Gilang Charismadiptya Prashasta
+* free to use and modified
+*/
 function vnEngine(){
   var self = this;
   
@@ -736,8 +743,7 @@ function Button(text,x,y,width,height){
 function GraphicsManager(){
   this.changeBackground = function(imageLabel,callback){
     var res;
-    if(imageLabel.color == undefined){
-      vnEngine.stateManager.backgroundImage = imageLabel; 
+    if(imageLabel.color == undefined){ //Check Background type if not solid color then get image resource
       vnEngine.stateManager.backgroundImage = imageLabel; 
       res  = vnEngine.resourceManager.getResource(imageLabel);
       if(res == false){
@@ -746,13 +752,15 @@ function GraphicsManager(){
     }
     else res = false;
 
+    //if we use images as background
     if(res){
       res = res.img;
       var bitmap = new Bitmap(res);
       bitmap.scaleY =  vnEngine.canvas.height / res.height;
       bitmap.scaleX = vnEngine.canvas.width /  res.width;
     }
-    else{
+    //If we use color as background
+    else{ 
       var g = new Graphics();
       g.beginFill(imageLabel.color);
       g.drawRect(0,0,vnEngine.canvas.width,vnEngine.canvas.height);
@@ -762,9 +770,13 @@ function GraphicsManager(){
     bitmap.x =0;
     bitmap.y = 0;
     bitmap.isBackground = true;
+
+    //set bitmap onclick to run next script if current status is game or menu
     if(vnEngine.stateManager.getScreenStatus() =="game" || vnEngine.stateManager.getScreenStatus() =="menu"){
       bitmap.onClick = vnEngine.checkNextScript;
     }
+
+    //Check Background Position , for tweening background
     if(vnEngine.stage.getNumChildren() >0){
       if(vnEngine.stage.getChildAt(0).isBackground){
         vnEngine.stateManager.noCheckScriptFlag = true;
@@ -772,29 +784,29 @@ function GraphicsManager(){
         vnEngine.stage.removeChildAt(0);
         vnEngine.stage.addChildAt(bitmap,0);
         vnEngine.stage.addChildAt(old,0);
-        if(callback == undefined){
+        if(callback == undefined){ //callback undefined and child 0 is Background , Children >0
           Tween.get(bitmap).to({alpha:0}).to({alpha:1},300)
           .call(function(){
           vnEngine.stage.removeChildAt(0);vnEngine.stateManager.noCheckScriptFlag = false;});
         }
-        else{
+        else{ //callback defined and child 0 is Background , children >0
           Tween.get(bitmap).to({alpha:0}).to({alpha:1},300)
           .call(function() {
           vnEngine.stage.removeChildAt(0);callback();} );
         }
 
       }
-      else{
+      else{ //child 0 not background
       vnEngine.stage.addChildAt(bitmap,0);
       Tween.get(bitmap).to({alpha:0}).to({alpha:1},300);
       }
     }
-    else{
+    else{ //Children not exist
       vnEngine.stage.addChild(bitmap);
-      if(callback == undefined){
+      if(callback == undefined){ //Children not exist , no callback
         Tween.get(bitmap).to({alpha:0}).to({alpha:1},300);
       }
-      else{
+      else{ //Children exist , no callback
          Tween.get(bitmap).to({alpha:0}).to({alpha:1},300)
           .call(function() {
           callback();} );
