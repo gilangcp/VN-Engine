@@ -17,6 +17,7 @@ function StateManager(){
   this.jumpLabelList = new Array;
 	this.flagList = new Array;
 	this.defaultflagList = new Array;
+  this.paralaxableObject = new ParalaxableObject();
 
 	this.clearAllState = function(){
     this.dialogBox = undefined;
@@ -34,6 +35,8 @@ function StateManager(){
     this.displayCharacterList = {left: undefined , right: undefined , center: undefined};
     this.backgroundImage = undefined;
     this.bgm = undefined;
+
+    this.paralaxableObject.clean();
 	}
 
   //Look for any Flag / Jump label
@@ -189,6 +192,42 @@ function StateManager(){
       }
      console.log("state Loaded"); 
     });
+  }
+}
+
+
+function ParalaxableObject (){
+  this.array = new Array;
+  this.addObject = function(bitmap){
+      //Add or remove From Paralaxable Object
+      var index = this.array.indexOf(bitmap); 
+        if(index ==-1){ 
+          this.array.push(bitmap);
+        }
+        else{
+          this.array[index] = bitmap;
+        }
+  }
+
+  this.removeObject = function(bitmap){
+      //Add or remove From Paralaxable Object
+      var index = this.array.indexOf(bitmap); 
+        if(index !=-1){ 
+          this.array.splice(index,1);
+        }
+  }
+
+  this.clean = function(){
+    this.array.splice(0,this.length);
+  }
+
+  this.moveObject = function(x,y){
+    for(var i = 0; i< this.array.length; i++){
+      if(this.array[i].isBackground){
+        this.array[i].x =(x/vnEngine.canvas.width/2) * (vnEngine.canvas.width - this.array[i].width)/2;
+        this.array[i].y =(y/vnEngine.canvas.height/2) * (vnEngine.canvas.height - this.array[i].height)/2;
+      }
+    }
   }
 }
 

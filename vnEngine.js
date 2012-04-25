@@ -35,11 +35,10 @@ function vnEngine(){
     //create & configure easel js canvas  
     this.stage = new Stage(this.canvas);
     this.stage.enableMouseOver();
+    this.stage.onMouseMove= this.stageMouseMoveListener;
     Ticker.useRAF = true; 
     Ticker.setFPS(20);
     Ticker.addListener(this.stage,false);
-
-
     //start loading resource
     this.resourceManager = new ResourceManager(this.stage);
     this.resourceManager.init();
@@ -654,6 +653,11 @@ function vnEngine(){
         });
       video.vid.play();
     }
+
+    this.stageMouseMoveListener = function(e){
+      //console.log(e); 
+      vnEngine.stateManager.paralaxableObject.moveObject(e.stageX,e.stageY);
+    }
 }
 
 function arrayIndexOf(array, obj,value) {
@@ -741,7 +745,21 @@ function Button(text,x,y,width,height){
 }
 
 function GraphicsManager(){
-  this.changeBackground = function(imageLabel,callback){
+  this.changeBackground = function(imageLabel,callback,options){
+
+    //OPTIONS
+    var BACKGROUND_PARALAX = 0.1;
+    //OPTIONS
+    var options = new Object;
+    options.enableParalax = true;
+    var paralaxModifier =0;
+
+    if(options){
+      if(options.enableParalax){
+        paralaxModifier = BACKGROUND_PARALAX;
+     }
+    }
+
     var res;
     if(imageLabel.color == undefined){ //Check Background type if not solid color then get image resource
       vnEngine.stateManager.backgroundImage = imageLabel; 
@@ -756,8 +774,12 @@ function GraphicsManager(){
     if(res){
       res = res.img;
       var bitmap = new Bitmap(res);
-      bitmap.scaleY =  vnEngine.canvas.height / res.height;
-      bitmap.scaleX = vnEngine.canvas.width /  res.width;
+      bitmap.scaleY =  (vnEngine.canvas.height / res.height) + paralaxModifier ;
+      bitmap.scaleX = (vnEngine.canvas.width /  res.width) + paralaxModifier;
+      bitmap.x = (vnEngine.canvas.height - (bitmap.scaleY *res.height))/2 ;
+      bitmap.y = (vnEngine.canvas.width - (bitmap.scaleX *res.width))/2;
+      bitmap.width =bitmap.scaleX *res.width;
+      bitmap.height =bitmap.scaleY *res.height;
     }
     //If we use color as background
     else{ 
@@ -765,16 +787,21 @@ function GraphicsManager(){
       g.beginFill(imageLabel.color);
       g.drawRect(0,0,vnEngine.canvas.width,vnEngine.canvas.height);
       var bitmap = new Shape(g);
+      bitmap.width =vnEngine.canvas.width;
+      bitmap.height =vnEngine.canvas.height;
     }
 
-    bitmap.x =0;
-    bitmap.y = 0;
     bitmap.isBackground = true;
 
     //set bitmap onclick to run next script if current status is game or menu
     if(vnEngine.stateManager.getScreenStatus() =="game" || vnEngine.stateManager.getScreenStatus() =="menu"){
       bitmap.onClick = vnEngine.checkNextScript;
     }
+
+    //Set background to be exposed to paralax effect
+    if(paralaxModifier > 0 && res != false){
+      vnEngine.stateManager.paralaxableObject.addObject(bitmap);
+    }else vnEngine.stateManager.paralaxableObject.removeObject(bitmap);
 
     //Check Background Position , for tweening background
     if(vnEngine.stage.getNumChildren() >0){
