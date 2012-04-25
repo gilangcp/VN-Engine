@@ -1,5 +1,7 @@
 var script = new Array;
  
+
+
   //splash screen must be defined before init menu
   script.push({type:'changeBackground',imageLabel:'logo'});
   script.push({type:'delay',ms:2000});
@@ -49,7 +51,9 @@ var script = new Array;
   script.push({type:'speak' ,character: 'Aku' ,speak: 'Aku bersiap untuk berangkat ke kampus'});
 
   script.push({type:'changeBackground',imageLabel:'roadDay'});
-  script.push({type:'showCharacter',imageLabel :'chararian1', position: 'center'});
+  script.push({type:'showCharacter',imageLabel :'charaClara1', position: 'center'});
+  script.push({type:'showCharacter',imageLabel :'charaLily1', position: 'left'});
+  script.push({type:'showCharacter',imageLabel :'charaRina1', position: 'right'});
 
   script.push({type:'speak' ,character: 'Rian' ,speak: 'Halo dani!'});
   script.push({type:'speak' ,character: 'Aku' ,speak: 'Lanjut Next time =p'});

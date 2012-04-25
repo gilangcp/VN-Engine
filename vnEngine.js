@@ -669,7 +669,6 @@ function arrayIndexOf(array, obj,value) {
       return -1;
   }
 
-
 function Button(text,x,y,width,height){
   var self = this;
   this.align = "center";
@@ -844,30 +843,36 @@ function GraphicsManager(){
  this.showCharacter = function(chara , position){
     var res  = vnEngine.resourceManager.getResource(chara).img;
     var bitmap = new Bitmap(res);
-    var scaledY = vnEngine.canvas.height * (9/10);
+    var scaledY = (vnEngine.canvas.height * (9/10))/res.height;
 
-    var Yscaling = scaledY/res.height; 
-
-    bitmap.scaleY =  Yscaling;
-    bitmap.scaleX =  Yscaling;
+    bitmap.scaleY =  scaledY;
+    bitmap.scaleX =  scaledY;
+    bitmap.width = bitmap.scaleX * res.width;
+    bitmap.height = bitmap.scaleY * res.height;
     bitmap.y = 1/10 * vnEngine.canvas.height;
     
     switch(position){
       case 'left' :
-        bitmap.x = 1/4 * vnEngine.canvas.width *Yscaling/2;
+        bitmap.x = 1/4 * vnEngine.canvas.width *scaledY/2;
       break;
       case 'right':
-        bitmap.x = vnEngine.canvas.width  *3/4 - res.width*Yscaling /2;
+        bitmap.x = vnEngine.canvas.width  *3/4 - res.width*scaledY/2;
       break;
       case 'center' :
-        bitmap.x = vnEngine.canvas.width/2 - res.width*Yscaling /2;
+        bitmap.x = vnEngine.canvas.width/2 - res.width*scaledY/2;
       break;
       default:
-        alert("script Error");
+        alert("script Error \n Character position error \n");
       break;
   } 
+  bitmap.centerX = bitmap.x;
+  bitmap.centerY = bitmap.y; 
   vnEngine.stateManager.displayCharacterList[position] = chara;
-  bitmap.position = position;   
+  bitmap.position = position;
+
+  bitmap.isCharacter = true;
+  vnEngine.stateManager.paralaxableObject.addObject(bitmap);
+
   vnEngine.stage.addChildAt(bitmap,2); 
   Tween.get(bitmap).to({alpha:0}).wait(100).to({alpha:1},300);
   }
@@ -876,7 +881,7 @@ function GraphicsManager(){
     var chara,i;
     for(i = 0 ; i < vnEngine.stage.getNumChildren();i++){
       chara = vnEngine.stage.getChildAt(i);
-      if(chara.position != undefined ){
+      if(chara.isCharacter){
         if(chara.position == position) {
           break;
         }
@@ -886,6 +891,7 @@ function GraphicsManager(){
         console.log("character not found");
       }
       else{
+        vnEngine.stateManager.paralaxableObject.removeObject(vnEngine.stage.getChildAt(i));
         Tween.get(chara).to({alpha:0},100).call(vnEngine.stage.removeChild,
           [chara],vnEngine.stage);
           vnEngine.stateManager.displayCharacterList[position] = undefined;
@@ -907,8 +913,6 @@ function GraphicsManager(){
     }
   }
 }
-
-
 
 function Slider(x,y,width,height){
   var container = new Container();
