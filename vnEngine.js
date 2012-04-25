@@ -829,7 +829,7 @@ function GraphicsManager(){
   } 
   vnEngine.stateManager.displayCharacterList[position] = chara;
   bitmap.position = position;   
-  vnEngine.stage.addChildAt(bitmap,1); 
+  vnEngine.stage.addChildAt(bitmap,2); 
   Tween.get(bitmap).to({alpha:0}).wait(100).to({alpha:1},300);
   }
 

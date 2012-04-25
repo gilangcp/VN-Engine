@@ -4,6 +4,8 @@ var resourceList = new Array;
   resourceList.push({type :'img',url  :'resource/image/chara/rina1.png',imageLabel :'charaRina1'});
   resourceList.push({type :'img',url  :'resource/image/chara/clara1.png',imageLabel :'charaClara1'});
   resourceList.push({type :'img',url  :'resource/image/chara/lily1.png',imageLabel :'charaLily1'});
+  resourceList.push({type :'img',url  :'resource/image/chara/rian.png',imageLabel :'chararian1'});
+
 
   //BGM 
   resourceList.push({type :'snd',url  :'resource/sound/ending.mp3', soundLabel : 'ending'});

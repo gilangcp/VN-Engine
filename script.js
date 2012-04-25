@@ -22,7 +22,7 @@ var script = new Array;
               wrong :undefined});
 
 
-  script.push({type:'playBGM',soundLabel: 'awang'});
+  //script.push({type:'playBGM',soundLabel: 'awang'});
   script.push({type:'changeBackground',imageLabel:{color:Graphics.getRGB(0,0,0)}});
   script.push({type:'speak' ,character :'Aku', speak:'Aku merasa aneh'});
   script.push({type:'speak' ,character :'Aku', speak:'Tubuhku terasa berat'});
@@ -49,7 +49,9 @@ var script = new Array;
   script.push({type:'speak' ,character: 'Aku' ,speak: 'Aku bersiap untuk berangkat ke kampus'});
 
   script.push({type:'changeBackground',imageLabel:'roadDay'});
+  script.push({type:'showCharacter',imageLabel :'chararian1', position: 'center'});
 
+  script.push({type:'speak' ,character: 'Rian' ,speak: 'Halo dani!'});
   script.push({type:'speak' ,character: 'Aku' ,speak: 'Lanjut Next time =p'});
 
 
