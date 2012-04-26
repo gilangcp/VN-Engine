@@ -775,8 +775,8 @@ function GraphicsManager(){
       var bitmap = new Bitmap(res);
       bitmap.scaleY =  (vnEngine.canvas.height / res.height) + paralaxModifier ;
       bitmap.scaleX = (vnEngine.canvas.width /  res.width) + paralaxModifier;
-      bitmap.x = (vnEngine.canvas.height - (bitmap.scaleY *res.height))/2 ;
-      bitmap.y = (vnEngine.canvas.width - (bitmap.scaleX *res.width))/2;
+      bitmap.x = (vnEngine.canvas.height/2 - (bitmap.scaleY *res.height)/2) ;
+      bitmap.y = (vnEngine.canvas.width/2 - (bitmap.scaleX *res.width)/2);
       bitmap.width =bitmap.scaleX *res.width;
       bitmap.height =bitmap.scaleY *res.height;
     }

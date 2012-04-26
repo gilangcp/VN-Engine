@@ -224,13 +224,13 @@ function ParalaxableObject (){
   this.moveObject = function(x,y){
 
     //SETTINGS
-    PARALAX_SPEED = 0.4;
+    PARALAX_SPEED = 0.1;
     //SETTINGS
 
     for(var i = 0; i< this.array.length; i++){
       if(this.array[i].isBackground){
-        this.array[i].x =(x/vnEngine.canvas.width/2) * (vnEngine.canvas.width - this.array[i].width)/2;
-        this.array[i].y =(y/vnEngine.canvas.height/2) * (vnEngine.canvas.height - this.array[i].height)/2;
+        this.array[i].x =(x/vnEngine.canvas.width) * (vnEngine.canvas.width - this.array[i].width);
+        this.array[i].y =(y/vnEngine.canvas.height) * (vnEngine.canvas.height - this.array[i].height);
       }
       else if(this.array[i].isCharacter){
         this.array[i].x = this.array[i].centerX -((x / vnEngine.canvas.width * this.array[i].width) - this.array[i].width/2) *PARALAX_SPEED;
