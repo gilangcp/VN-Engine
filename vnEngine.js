@@ -107,7 +107,7 @@ function vnEngine(){
       this.stateManager.tempScriptCounter++;
       this.parseScript(this.stateManager.tempScriptQueue,this.stateManager.tempScriptCounter);
      }
-     else{
+     else if(this.stateManager.scriptCounter<script.length){
       this.stateManager.scriptCounter++;
       this.parseScript(script,this.stateManager.scriptCounter);
     }
@@ -761,13 +761,14 @@ function GraphicsManager(){
 
     var res;
     if(imageLabel.color == undefined){ //Check Background type if not solid color then get image resource
-      vnEngine.stateManager.backgroundImage = imageLabel; 
       res  = vnEngine.resourceManager.getResource(imageLabel);
       if(res == false){
         alert("script error \nChangeBackground : \nimageLabel : "+imageLabel+" not found \nscript line : "+vnEngine.scriptCounter);
       }
     }
     else res = false;
+    
+    vnEngine.stateManager.backgroundImage = imageLabel; 
 
     //if we use images as background
     if(res){

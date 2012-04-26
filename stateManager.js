@@ -141,6 +141,7 @@ function StateManager(){
     vnEngine.soundController.playBGM(state.BGM);
 
     self.setScreenStatus("game");
+    console.log(state.BGI);
     vnEngine.graphicsManager.changeBackground(state.BGI, function(){
       if(self.getOldScreenStatus() == "MAIN_MENU"){
           vnEngine.graphicsManager.createDialogBox();
