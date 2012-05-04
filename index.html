@@ -2,7 +2,7 @@
   <head>
     <title></title>
     <meta content="">
-    <style></style>
+    <script type="text/javascript" src="zepto.js"></script>
     <script type="text/javascript" src="soundManager2.js"></script>
     <script type="text/JavaScript" src="PxLoader.js"></script> 
     <script type="text/JavaScript" src="PxLoaderImage.js"></script> 
@@ -23,41 +23,61 @@
     <script type="text/JavaScript" src="vnEngine.js"></script> 
 
     <script type="text/javascript">
-     window.onload = function(){   
-      // initialize the sound manager 
-      soundManager.url = 'soundManager2/'; 
-      soundManager.flashVersion = 9; 
-      soundManager.useHighPerformance = true; // reduces delays 
-       
-      // reduce the default 1 sec delay to 500 ms 
-      soundManager.flashLoadTimeout = 500; 
-       
-      // mp3 is required by default, but we don't want any requirements 
-      soundManager.audioFormats.mp3.required = true; 
-       
-      // flash may timeout if not installed or when flashblock is installed 
-      soundManager.ontimeout(function(status) { 
-          // no flash, go with HTML5 audio 
-          soundManager.useHTML5Audio = true; 
-          soundManager.preferFlash = false; 
-          soundManager.reboot(); 
-      }); 
-       
-      soundManager.onready(function() { 
-        // ok to show the button to run the sound sample
-        vnEngine = new vnEngine();
-        vnEngine.initGame("game");
+      //Load The Game
+     window.onload = function(){
+      var width = window.innerWidth;
+      var height = (width*9)/16;
+      $("#game").attr('width',width);
+      $("#game").attr('height',height);
 
-      }); 
+      if(typeof(o) == 'object'){vnEngine.stage.update();};
+
+      vnEngine = new VnEngine();
+      vnEngine.initGame("game");
     }
-    </script>
-  </head>
-  <body >
 
-  <!-- nyaha --  350 393.75-->
-    <canvas id="game" width="700" height="393.75" style="border:1px solid black;">-->
-    <!--<canvas id="game" width="1024" height="576" style="border:1px solid black;">-->
-      Your Browser doesn't support HTML 5 :(
-    </canvas>    
+    </script>
+
+    <style type="text/css">
+    html, body {
+      margin: 0;
+      padding: 0;
+    }
+    #game{
+
+      -moz-box-shadow: 0 0 5px 5px #FFF;
+      -webkit-box-shadow: 0 0 5px 5px#FFF;
+      box-shadow: 0 0 5px 5px #FFF;
+      clear: both; 
+      display: block;    
+    }
+
+    body
+   {
+   overflow: hidden; 
+    background-image: linear-gradient(bottom, rgb(10,10,10) 40%, rgb(26,25,26) 70%);
+    background-image: -o-linear-gradient(bottom, rgb(10,10,10) 40%, rgb(26,25,26) 70%);
+    background-image: -moz-linear-gradient(bottom, rgb(10,10,10) 40%, rgb(26,25,26) 70%);
+    background-image: -webkit-linear-gradient(bottom, rgb(10,10,10) 40%, rgb(26,25,26) 70%);
+    background-image: -ms-linear-gradient(bottom, rgb(10,10,10) 40%, rgb(26,25,26) 70%);
+
+    background-image: -webkit-gradient(
+      linear,
+      left bottom,
+      left top,
+      color-stop(0.4, rgb(10,10,10)),
+      color-stop(0.7, rgb(26,25,26))
+    );
+    clear:both;
+    margin-top: 5%;
+  }
+
+  </style>
+  </head>
+  <body>
+      <canvas id="game" style="border:1px solid black;">-->
+        Your Browser doesn't support HTML 5 :(
+      </canvas>    
   </body>
 </html>
+

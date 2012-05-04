@@ -5,7 +5,7 @@
 * 2012 Gilang Charismadiptya Prashasta
 * free to use and modified
 */
-function vnEngine(){
+function VnEngine(){
   var self = this;
   
   this.canvas;
@@ -18,30 +18,51 @@ function vnEngine(){
   this.stateManager;
 
   this.initGame = function(canvasId){
-    //Bind canvas to easel JS
-    this.canvas = document.getElementById(canvasId);
-    document.getElementById(canvasId).oncontextmenu=new Function ("return false");
-    this.context = this.canvas.getContext("2d");
+      // initialize the sound manager 
+      soundManager.url = 'soundManager2/'; 
+      soundManager.flashVersion = 9; 
+      soundManager.useHighPerformance = true; // reduces delays 
+       
+      // reduce the default 1 sec delay to 500 ms 
+      soundManager.flashLoadTimeout = 500; 
+       
+      // mp3 is required by default, but we don't want any requirements 
+      soundManager.audioFormats.mp3.required = true; 
+       
+      // flash may timeout if not installed or when flashblock is installed 
+      soundManager.ontimeout(function(status) { 
+          // no flash, go with HTML5 audio 
+          soundManager.useHTML5Audio = true; 
+          soundManager.preferFlash = false; 
+          soundManager.reboot(); 
+      }); 
 
-    //setup sound Controller ,GraphicsManager and stateManager
-    this.graphicsManager = new GraphicsManager();
-    this.soundController = new SoundController(); 
-    this.stateManager = new StateManager();
+      soundManager.onready(function() { 
+        //Bind canvas to easel JS
+        vnEngine.canvas = document.getElementById(canvasId);
+        document.getElementById(canvasId).oncontextmenu=new Function ("return false");
+        vnEngine.context = vnEngine.canvas.getContext("2d");
 
-    //Check Script for any jump & flag
-    //Put every jump label into array 
-    this.stateManager.initScript();
+        //setup sound Controller ,GraphicsManager and stateManager
+        vnEngine.graphicsManager = new GraphicsManager();
+        vnEngine.soundController = new SoundController(); 
+        vnEngine.stateManager = new StateManager();
 
-    //create & configure easel js canvas  
-    this.stage = new Stage(this.canvas);
-    this.stage.enableMouseOver();
-    this.stage.onMouseMove= this.stageMouseMoveListener;
-    Ticker.useRAF = true; 
-    Ticker.setFPS(20);
-    Ticker.addListener(this.stage,false);
-    //start loading resource
-    this.resourceManager = new ResourceManager(this.stage);
-    this.resourceManager.init();
+        //Check Script for any jump & flag
+        //Put every jump label into array 
+        vnEngine.stateManager.initScript();
+
+        //create & configure easel js canvas  
+        vnEngine.stage = new Stage(vnEngine.canvas);
+        vnEngine.stage.enableMouseOver();
+        vnEngine.stage.onMouseMove= vnEngine.stageMouseMoveListener;
+        Ticker.useRAF = true; 
+        Ticker.setFPS(20);
+        Ticker.addListener(vnEngine.stage,false);
+        //start loading resource
+        vnEngine.resourceManager = new ResourceManager(vnEngine.stage);
+        vnEngine.resourceManager.init();
+      }); 
   }
 
   this.initGameEnvirontment = function(){
@@ -132,7 +153,13 @@ function vnEngine(){
         this.speak(script[scriptCounter-1].character,script[scriptCounter-1].speak);
         break;
       case 'changeBackground':
-        this.graphicsManager.changeBackground(script[scriptCounter-1].imageLabel);
+        if(typeof(script[scriptCounter-1].nonParalaxable)!=undefined){
+            this.graphicsManager.changeBackground(script[scriptCounter-1].imageLabel,undefined,
+              script[scriptCounter-1].nonParalaxable);
+          }
+          else{
+            this.graphicsManager.changeBackground(script[scriptCounter-1].imageLabel);
+          }
         vnEngine.checkScript();
         break;
       case 'delay' :
@@ -255,9 +282,7 @@ function vnEngine(){
         }
         vnEngine.stage.removeChild(container);
 
-
         //load State
-
         if(e.target.state){
           if(e.target.isInMainMenu){
             if(e.target.isInMainMenu.target.parent.parent.isContainer == "true"){
@@ -745,18 +770,22 @@ function Button(text,x,y,width,height){
 
 function GraphicsManager(){
   this.changeBackground = function(imageLabel,callback,options){
+    console.log(options);
 
     //OPTIONS
     var BACKGROUND_PARALAX = 0.1;
     //OPTIONS
-    var options = new Object;
-    options.enableParalax = true;
     var paralaxModifier =0;
 
-    if(options){
-      if(options.enableParalax){
-        paralaxModifier = BACKGROUND_PARALAX;
+    if(typeof(options)!=undefined){
+      if(options == true){
      }
+     else{
+      paralaxModifier = BACKGROUND_PARALAX;
+     }
+    }
+    else{
+      paralaxModifier = BACKGROUND_PARALAX;
     }
 
     var res;

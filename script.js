@@ -3,19 +3,15 @@ var script = new Array;
 
 
   //splash screen must be defined before init menu
-  script.push({type:'changeBackground',imageLabel:'logo'});
+  script.push({type:'changeBackground',imageLabel:'logo',nonParalaxable:true});
   script.push({type:'delay',ms:2000});
-  script.push({type:'playVideo',videoLabel:'wongIT'});
   script.push({type:'initMenu'});
 
   //Game start point always start with "startGame" jumpLabel
   script.push({type:'addJumpLabel', jumpLabel:'startGame'});
-
   script.push({type:'addFlag',flagLabel :'F1',flagValue:'false'});
   script.push({type:'addFlag',flagLabel :'F2',flagValue:'false'});
-
   script.push({type:'addJumpLabel', jumpLabel:'A1'});
-
   script.push({type:'if',
               op:'==',
               exp1 : {type:'getFlag',flagLabel:"F2"}, 
@@ -40,7 +36,7 @@ var script = new Array;
 
   script.push({type: 'speak' , character:'Aku', speak:'Aku terbangun dari mimpiku'});
   script.push({type:'speak' ,character :'Aku', speak: 'Tubuhku masih kaku tidak bisa digerakan'});
-  script.push({type:'speak' ,character :'Aku', speak: 'Dengan perlahan aku membuka jendala kamar ku'});
+  script.push({type:'speak' ,character :'Aku', speak: 'Dengan perlahan aku membuka jendela kamar ku'});
   script.push({type:'changeBackground',imageLabel:'roomDay'});
   script.push({type:'speak' ,character :'Aku', speak: 'Cahaya matahari yang menyilaukan masuk kedalam kamarku'});
   script.push({type:'speak' ,character :'Aku', speak: 'Tanpa sadar aku menutup mataku yang masih beradaptasi dengan sinar fajar'});
@@ -51,54 +47,7 @@ var script = new Array;
   script.push({type:'speak' ,character: 'Aku' ,speak: 'Aku bersiap untuk berangkat ke kampus'});
 
   script.push({type:'changeBackground',imageLabel:'roadDay'});
-  script.push({type:'showCharacter',imageLabel :'charaClara1', position: 'center'});
-  script.push({type:'showCharacter',imageLabel :'charaLily1', position: 'left'});
-  script.push({type:'showCharacter',imageLabel :'charaRina1', position: 'right'});
+  script.push({type:'showCharacter',imageLabel :'chararian1', position: 'center'});
 
-  script.push({type:'speak' ,character: 'Rian' ,speak: 'Halo dani!'});
+  script.push({type:'speak' ,character: 'Rian' ,speak: 'Halo Rian!'});
   script.push({type:'speak' ,character: 'Aku' ,speak: 'Lanjut Next time =p'});
-
-
-
-
-
-
-
-
-
-/*
-  script.push({type:'playBGM',soundLabel: 'normal'});
-  script.push({type:'showCharacter',imageLabel :'charaClara1', position: 'center'});
-  script.push({type:'pauseScript'});
-  script.push({type:'playBGM',soundLabel: 'normal'});
-  script.push({type:'showCharacter',imageLabel :'charaLily1',position:'right'});
-  script.push({type:'pauseScript'});
-
-  script.push({type:'changeBackground',imageLabel:'2'});
-  script.push({type:'speak', character :'rina',speak : 'apaan pagi-pagi udah halo?'});
-  script.push({type:'changeBackground',imageLabel:'background2'});
-  script.push({type:'pauseScript'});
-  script.push({type:'hideCharacter',position :'right'});
-  script.push({type:'pauseScript'});
-  script.push({type:'hideCharacter',position :'left'});
-  script.push({type:'pauseScript'});
-  script.push({type:'changeBackground',imageLabel:'background2'});
-  script.push({type:'pauseScript'});
-  script.push({type:'speak',character : 'gilang' , speak : 'Eh? semuanya pada kemana?'});
-  script.push({type:'hideCharacter',position :'center'});
-
-  script.push({type:'if',
-            op:'==',
-            exp1 : {type:'getFlag',flagLabel:"F1"}, 
-            exp2:'true',
-            right : undefined,
-            wrong :[{type :'editFlag',flagLabel:'F2',flagValue:'true'},{type :'jumpTo',jumpLabel:'A1'}]});
-  
-  script.push({type:'option' , optionList : [
-    {caption : 'Ulangi' , perform: {type : 'jumpTo' , jumpLabel:'A1'}},
-    {caption :'Selesai' , perform: undefined}
-  ]});
-
-  script.push({type:'playBGM',soundLabel: 'ending'});
-  script.push({type: 'speak', character:'Gilang',speak:'apa yang terjadi? gamenya selesai?'});
-*/

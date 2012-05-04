@@ -36,7 +36,7 @@ function ResourceManager(stage) {
   }
 
   this.resProgressListener = function(e){
-    var text = new Text ("","20px arial","#000");
+    var text = new Text ("","20px arial","#FFF");
     text.text = "loading resource ("+e.completedCount + "/" +e.totalCount+")";
     text.x = vnEngine.canvas.width/2-text.getMeasuredWidth()/2;
     text.y = vnEngine.canvas.height/2;
